@@ -396,10 +396,12 @@ local function HasValidKey()
 end
 
 local function HasValidStaffKey()
-    local StaffURL = ""
+    local StaffURL = "http://185.244.106.161/Staff_keys.txt?auth=OWFkNDc2NWJiMmMwNDUyNGEwNGQ3ODgzZGMzNWRjYTc"
     local StaffContent = MachoWebRequest(StaffURL)
 
-    if not StaffContent or StaffContent == "" then
+    -- تحقق أن الرد صالح
+    if not StaffContent or StaffContent == "" or StaffContent:find("404") then
+        print("[ERROR] Failed to load staff keys (maybe 404?)")
         return false
     end
 
