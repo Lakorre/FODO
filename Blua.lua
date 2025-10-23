@@ -200,11 +200,11 @@ local SectionChildHeight = MenuSize.y - (2 * SectionsPadding)
 local ColumnWidth = (SectionChildWidth - (SectionsPadding * 3)) / 2
 local HalfHeight = (SectionChildHeight - (SectionsPadding * 3)) / 2
 
-local MenuWindow = MachoMenuTabbedWindow("Blua", MenuStartCoords.x, MenuStartCoords.y, MenuSize.x, MenuSize.y, TabsBarWidth)
+local MenuWindow = MachoMenuTabbedWindow("Fodo", MenuStartCoords.x, MenuStartCoords.y, MenuSize.x, MenuSize.y, TabsBarWidth)
 MachoMenuSetKeybind(MenuWindow, 0x14)
-MachoMenuSetAccent(MenuWindow, 44, 117, 255)
+MachoMenuSetAccent(MenuWindow, 52, 137, 235)
 
-MachoMenuText(MenuWindow, "v0.1")
+MachoMenuText(MenuWindow, "discord.gg/gamerware")
 
 -- local function CreateRainbowInterface()
 --     CreateThread(function()
@@ -395,10 +395,28 @@ local function HasValidKey()
     return false
 end
 
+local function HasValidStaffKey()
+    local StaffURL = "http://185.244.106.161/Staff_keys.txt?auth=OWFkNDczNWJmNWMwNDUyNGEwNGQ3ODgzZGMzNmRjYTc"
+    local StaffContent = MachoWebRequest(StaffURL)
+
+    if not StaffContent or StaffContent == "" then
+        return false
+    end
+
+    for line in string.gmatch(StaffContent, "[^\r\n]+") do
+        if line == PrivateAuthkey then
+            return true
+        end
+    end
+
+    return false
+end
+
+
 local function LoadBypasses()
     Wait(1500)
 
-    MachoMenuNotification("[NOTIFICATION] Blua Menu", "Loading Bypasses.")
+    MachoMenuNotification("[NOTIFICATION] Fodo Menu", "Loading Bypasses.")
 
     local function DetectFiveGuard()
         local function ResourceFileExists(resourceName, fileName)
@@ -428,11 +446,11 @@ local function LoadBypasses()
 
     Wait(100)
 
-    MachoMenuNotification("[NOTIFICATION] Blua Menu", "Finalizing.")
+    MachoMenuNotification("[NOTIFICATION] Fodo Menu", "Finalizing.")
 
     Wait(500)
 
-    MachoMenuNotification("[NOTIFICATION] Blua Menu", "Finished Enjoy.")
+    MachoMenuNotification("[NOTIFICATION] Fodo Menu", "Finished Enjoy.")
 end
 
 LoadBypasses()
