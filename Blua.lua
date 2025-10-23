@@ -839,13 +839,10 @@ MachoMenuCheckbox(PlayerTabSections[1], "No Clip", function()
         KUQpH7owdz()
     ]])
 end, function()
- MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-        peqCrVzHDwfkraYZ = false
-        local aukLdkvEinBsMWuA = SetPedConfigFlag
-        aukLdkvEinBsMWuA(PlayerPedId(), 223, false)
+    MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
+        NpYgTbUcXsRoVm = false
     ]])
 end)
-
 
 MachoMenuCheckbox(PlayerTabSections[1], "Free Camera", function()
     MachoInjectResource((CheckResource("core") and "core") or (CheckResource("es_extended") and "es_extended") or (CheckResource("qb-core") and "qb-core") or (CheckResource("monitor") and "monitor") or "any", [[
@@ -1047,21 +1044,31 @@ end)
 
 MachoMenuCheckbox(PlayerTabSections[1], "Super Jump", function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-        if SuperJumpEnabled == nil then 
-            SuperJumpEnabled = false 
+        if xCvBnMqWeRtYuIo == nil then xCvBnMqWeRtYuIo = false end
+        xCvBnMqWeRtYuIo = true
+
+        local function JcWT5vYEq1()
+            local yLkPwOiUtReAzXc = CreateThread
+            yLkPwOiUtReAzXc(function()
+                while xCvBnMqWeRtYuIo and not Unloaded do
+                    local hGfDsAzXcVbNmQw = SetSuperJumpThisFrame
+                    local eRtYuIoPaSdFgHj = PlayerPedId()
+                    local oPlMnBvCxZlKjHg = PlayerId()
+
+                    hGfDsAzXcVbNmQw(oPlMnBvCxZlKjHg)
+                    Wait(0)
+                end
+            end)
         end
-        
-        SuperJumpEnabled = true
-        
-        CreateThread(function()
-            while SuperJumpEnabled and not Unloaded do
-                SetSuperJumpThisFrame(PlayerId())
-                Wait(0)
-            end
-        end)
+
+        JcWT5vYEq1()
+    ]])
+end, function()
+    MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
+        xCvBnMqWeRtYuIo = false
     ]])
 end)
-        
+
 MachoMenuCheckbox(PlayerTabSections[1], "Levitation", function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
         -- make helpers global so other chunks can use them
@@ -1122,8 +1129,8 @@ MachoMenuCheckbox(PlayerTabSections[1], "Levitation", function()
             local hit, endCoords = GetClosestCoordOnLine(camCoord, destination, playerPed)
             if hit then return endCoords else return destination end
         end
-   ]])
-end)
+    ]])
+
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
         local function awfjawr57awt7f()
             nxtBFlQWMMeRLs = true
