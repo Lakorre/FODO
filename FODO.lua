@@ -416,7 +416,7 @@ end
 local function LoadBypasses()
     Wait(1500)
 
-    MachoMenuNotification("[NOTIFICATION] Fodo Menu", "Loading Bypasses.")
+    MachoMenuNotification("[NOTIFICATION] Blua Menu", "Loading Bypasses.")
 
     local function DetectFiveGuard()
         local function ResourceFileExists(resourceName, fileName)
@@ -446,11 +446,11 @@ local function LoadBypasses()
 
     Wait(100)
 
-    MachoMenuNotification("[NOTIFICATION] Fodo Menu", "Finalizing.")
+    MachoMenuNotification("[NOTIFICATION] Blua Menu", "Finalizing.")
 
     Wait(500)
 
-    MachoMenuNotification("[NOTIFICATION] Fodo Menu", "Finished Enjoy.")
+    MachoMenuNotification("[NOTIFICATION] Blua Menu", "Finished Enjoy.")
 end
 
 LoadBypasses()
