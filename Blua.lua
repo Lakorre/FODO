@@ -1050,10 +1050,16 @@ MachoMenuCheckbox(PlayerTabSections[1], "Super Jump", function()
         zXcVbNmQwErTyUi(function()
             local aSdFgHjKlZxCvBn = SetSuperJumpThisFrame
             local pOiUyTrEwQaSdFg = PlayerId
+            local hGfDsAqWeRtYuIo = PlayerPedId
             
             while qWxRtNpLkMnHgFd do
                 local mNbVcXzAsQwErTy = pOiUyTrEwQaSdFg()
-                aSdFgHjKlZxCvBn(mNbVcXzAsQwErTy)
+                local vBnMlKjHgFdSaQw = hGfDsAqWeRtYuIo()
+                
+                -- تقليل قوة القفز
+                SetPlayerJumpThisFrame(mNbVcXzAsQwErTy)
+                SetPedJumpPower(vBnMlKjHgFdSaQw, 1.5)
+                
                 Wait(0)
             end
         end)
