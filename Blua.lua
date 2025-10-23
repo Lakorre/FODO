@@ -1038,33 +1038,37 @@ end, function()
     ]])
 end)
 
-MachoMenuCheckbox(PlayerTabSections[1], "Super Jump", function()
+MachoMenuCheckbox(PlayerTabSections[1], "Super JumpV2", function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-        if xCvBnMqWeRtYuIo == nil then xCvBnMqWeRtYuIo = false end
-        xCvBnMqWeRtYuIo = true
-
-        local function JcWT5vYEq1()
-            local yLkPwOiUtReAzXc = CreateThread
-            yLkPwOiUtReAzXc(function()
-                while xCvBnMqWeRtYuIo and not Unloaded do
-                    local hGfDsAzXcVbNmQw = SetSuperJumpThisFrame
-                    local eRtYuIoPaSdFgHj = PlayerPedId()
-                    local oPlMnBvCxZlKjHg = PlayerId()
-
-                    hGfDsAzXcVbNmQw(oPlMnBvCxZlKjHg)
-                    Wait(0)
-                end
-            end)
+        if SuperJumpActive == nil then 
+            SuperJumpActive = false 
         end
-
-        JcWT5vYEq1()
-    ]])
-end, function()
-    MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-        xCvBnMqWeRtYuIo = false
+        
+        SuperJumpActive = true
+        
+        Citizen.CreateThread(function()
+            while SuperJumpActive and not Unloaded do
+                local ped = PlayerPedId()
+                local player = PlayerId()
+                
+                -- تفعيل القفز الخارق
+                SetSuperJumpThisFrame(player)
+                
+                -- يمكنك تعديل قوة القفز (اختياري)
+                SetPedCanRagdoll(ped, false)
+                
+                Citizen.Wait(0)
+            end
+            
+            -- إعادة تعيين عند الإيقاف
+            if not SuperJumpActive then
+                SetPedCanRagdoll(PlayerPedId(), true)
+            end
+        end)
     ]])
 end)
-
+end, function()
+        
 MachoMenuCheckbox(PlayerTabSections[1], "Levitation", function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
         -- make helpers global so other chunks can use them
