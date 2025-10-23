@@ -1042,25 +1042,20 @@ end, function()
     ]])
 end)
 
-MachoMenuCheckbox(PlayerTabSections[1], "Super Jumpv2", function()
+MachoMenuCheckbox(PlayerTabSections[1], "Light Jump", function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-        local qWxRtNpLkMnHgFd = true
-        local zXcVbNmQwErTyUi = CreateThread or Citizen.CreateThread
+        local jumpActive = true
         
-        zXcVbNmQwErTyUi(function()
-            local aSdFgHjKlZxCvBn = SetSuperJumpThisFrame
-            local pOiUyTrEwQaSdFg = PlayerId
-            local hGfDsAqWeRtYuIo = PlayerPedId
-            
-            while qWxRtNpLkMnHgFd do
-                local mNbVcXzAsQwErTy = pOiUyTrEwQaSdFg()
-                local vBnMlKjHgFdSaQw = hGfDsAqWeRtYuIo()
+        Citizen.CreateThread(function()
+            while jumpActive do
+                local ped = PlayerPedId()
                 
-                -- تقليل قوة القفز
-                SetPlayerJumpThisFrame(mNbVcXzAsQwErTy)
-                SetPedJumpPower(vBnMlKjHgFdSaQw, 1.5)
+                -- قفز خفيف ومحسّن
+                SetPedCanRagdoll(ped, false)
+                SetPedConfigFlag(ped, 60, true)
+                SetPedConfigFlag(ped, 166, true)
                 
-                Wait(0)
+                Citizen.Wait(0)
             end
         end)
     ]])
