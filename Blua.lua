@@ -850,190 +850,2037 @@ MachoMenuCheckbox(PlayerTabSections[1], "Free Camera", function()
         g_FreecamFeatureEnabled = true
         
         local function initializeFreecam()
-            -- Script State
-            local isFreecamActive = false
-            local freecamHandle = nil
-            local targetCoords, targetEntity = nil, nil
-            local currentFeatureIndex = 1
+          local freeCamActive = false
+local freeCam = nil
+local playerPed = nil
+local controlledEntity = nil
+local isControllingEntity = false
+local remotePed = nil
+local isControllingRemotePed = false
+local controlledRCCar = nil
+local isControllingRCCar = false
+local weapons = {
+    "WEAPON_RAILGUN", "WEAPON_ASSAULTSHOTGUN", "WEAPON_SMG", "WEAPON_FIREWORK", "WEAPON_MOLOTOV",
+    "WEAPON_APPISTOL", "WEAPON_STUNGUN", "WEAPON_ASSAULTRIFLE", "WEAPON_ASSAULTRIFLE_MK2",
+    "WEAPON_ASSAULTSMG", "WEAPON_AUTOSHOTGUN", "WEAPON_BULLPUPRIFLE", "WEAPON_BULLPUPRIFLE_MK2",
+    "WEAPON_BULLPUPSHOTGUN", "WEAPON_BZGAS", "WEAPON_CARBINERIFLE", "WEAPON_CARBINERIFLE_MK2",
+    "WEAPON_COMBATMG", "WEAPON_COMBATMG_MK2", "WEAPON_COMBATPDW", "WEAPON_COMBATPISTOL",
+    "WEAPON_COMPACTLAUNCHER", "WEAPON_COMPACTRIFLE", "WEAPON_DBSHOTGUN", "WEAPON_DOUBLEACTION",
+    "WEAPON_FIREEXTINGUISHER", "WEAPON_FLARE", "WEAPON_FLAREGUN", "WEAPON_GRENADE",
+    "WEAPON_GUSENBERG", "WEAPON_HEAVYPISTOL", "WEAPON_HEAVYSHOTGUN", "WEAPON_HEAVYSNIPER",
+    "WEAPON_HEAVYSNIPER_MK2", "WEAPON_HOMINGLAUNCHER", "WEAPON_MACHINEPISTOL",
+    "WEAPON_MARKSMANPISTOL", "WEAPON_MARKSMANRIFLE", "WEAPON_MARKSMANRIFLE_MK2", "WEAPON_MG",
+    "WEAPON_MICROSMG", "WEAPON_MINIGUN", "WEAPON_MINISMG", "WEAPON_MUSKET", "WEAPON_NAVYREVOLVER",
+    "WEAPON_PIPEBOMB", "WEAPON_PISTOL", "WEAPON_PISTOL50", "WEAPON_PISTOL_MK2", "WEAPON_POOLCUE",
+    "WEAPON_PROXMINE", "WEAPON_PUMPSHOTGUN", "WEAPON_PUMPSHOTGUN_MK2", "WEAPON_RAYCARBINE",
+    "WEAPON_RAYMINIGUN", "WEAPON_RAYPISTOL", "WEAPON_REVOLVER", "WEAPON_REVOLVER_MK2",
+    "WEAPON_SAWNOFFSHOTGUN", "WEAPON_RPG", "WEAPON_SMG", "WEAPON_SMG_MK2", "WEAPON_SMOKEGRENADE", 
+    "WEAPON_SNIPERRIFLE", "WEAPON_SNOWBALL", "WEAPON_SNSPISTOL", "WEAPON_SNSPISTOL_MK2",
+    "WEAPON_SPECIALCARBINE", "WEAPON_SPECIALCARBINE_MK2", "WEAPON_STICKYBOMB", "WEAPON_VINTAGEPISTOL"
+}
+local objects = {
+    "p_ld_stinger_s", "stt_prop_race_start_line_01b", "stt_prop_ramp_multi_loop_rb", "stt_prop_ramp_spiral_xxl",
+    "des_fib_frame", "prop_palm_fan_02_a", "stt_prop_stunt_tube_fn_02", "stt_prop_stunt_tube_fn_05", "stt_prop_stunt_tube_l",
+    "stt_prop_track_tube_02", "prop_tyre_wall_03b", "stt_prop_race_start_line_01", "stt_prop_stunt_track_straightice", "prop_tornado_wheel",
+    "prop_wheel_03", "p_ferris_wheel_amo_p", "prop_wheelchair_01_s", "vfx_it1_09", "hei_prop_heist_tug", "hei_prop_mini_sever_02", "p_cs_mp_jet_01_s", "p_med_jet_01_s",
+    "p_spinning_anus_s", "p_crahsed_heli_s", "w_ar_railgun", "prop_xmas_tree_int", "prop_snow_bench_01", "prop_rub_railwreck_1", "prop_rub_carwreck_5", "prop_rub_cabinet01",
+    "prop_skid_box_05", "prop_rub_railwreck_2", "prop_rub_buswreck_01", "prop_rub_bike_01"
+}
+local animals = {
+    "a_c_boar", "a_c_cat_01", "a_c_chickenhawk", "a_c_chimp", "a_c_cormorant",
+    "a_c_cow", "a_c_coyote", "a_c_crow", "a_c_deer", "a_c_dolphin",
+    "a_c_fish", "a_c_hen", "a_c_humpback", "a_c_killerwhale", "a_c_mtlion",
+    "a_c_pig", "a_c_pigeon", "a_c_rabbit_01", "a_c_rat", "a_c_seagull",
+    "a_c_sharkhammer", "a_c_shepherd", "a_c_stingray", "a_c_rabbit_02", "a_c_rhesus", "a_c_sharktiger", "a_c_pug"
+}
+local particles = {
+    {dict = "scr_exile1", name = "scr_ex1_plane_exp_sp"},
+    {dict = "scr_stunts", name = "scr_stunts_shotburst"},
+    {dict = "scr_solomon3", name = "scr_trev4_747_blood_impact"},
+    {dict = "scr_mp_creator", name = "scr_mp_plane_landing_tyre_smoke"},
+    {dict = "core", name = "ent_sht_oil"},
+    {dict = "scr_exile2", name = "scr_ex2_car_impact"},
+    {dict = "scr_agencyheistb", name = "scr_agency3b_linger_smoke"},
+    {dict = "scr_agencyheistb", name = "scr_agency3b_heli_expl"},
+    {dict = "scr_agencyheist", name = "scr_fbi_dd_breach_smoke"},
+    {dict = "scr_xs_celebration", name = "scr_xs_confetti_burst"},
+    {dict = "scr_rcbarry2", name = "scr_exp_clown_trails"},
+    {dict = "scr_xs_dr", name = "scr_xs_dr_emp"},
+    {dict = "scr_indep_fireworks", name = "scr_indep_firework_trailburst"},
+    {dict = "core", name = "ent_dst_gen_gobstop"},
+    {dict = "core", name = "ent_dst_inflatable"},
+    {dict = "core", name = "ent_dst_wood_splinter"},
+    {dict = "core", name = "ent_sht_extinguisher"},
+    {dict = "core", name = "bul_dirt"},
+    {dict = "core", name = "ent_sht_telegraph_pole"},
+    {dict = "scr_michael2", name = "scr_abattoir_ped_sliced"},
+    {dict = "scr_powerplay", name = "scr_powerplay_beast_appear"},
+    {dict = "scr_oddjobtraffickingair", name = "scr_ojdg4_water_exp"},
+    {dict = "scr_paletoscore", name = "scr_paleto_banknotes"},
+}
+local currentWeaponIndex = 1
+local currentObjectIndex = 1
+local currentParticleIndex = 1
+local freeCamSpeed = 0.4
+local boostMultiplier = 4.0
+local mouseSensitivity = 10.0
+local vehicleModel = GetHashKey("sultan") 
+local showText = false 
 
-            -- NEW FEATURE: Ped Spawning State
-            local pedsToSpawn = { "s_m_m_movalien_01", "u_m_y_zombie_01", "s_m_y_blackops_01", "csb_abigail", "a_c_coyote" }
-            local currentPedIndex = 1
+local options = {
+    {name = "Sh00t W3apon", action = "weapon"},
+    {name = "Sh00t An1mals", action = "shoot_animals"},
+    {name = "Obj3ct Spawn3r", action = "object"},
+    {name = "Telep0rt", action = "teleport"},
+    {name = "Sh00t Angry P3ds", action = "angry_ped"},
+    {name = "L4unch Att4ck Dog", action = "attack_dog"},
+    {name = "NPC H1jack V3h1cle", action = "npc_hijack_vehicle"},
+    {name = "Sh00t V3hicles", action = "vehicle_spam"},
+    {name = "Gl1tch Player Car", action = "glitch_car"},
+    {name = "Warp 1nto V3h1cle", action = "warp_into_vehicle"},
+    {name = "Black Hol3", action = "black_hole"},
+    {name = "C0ntrol Cars/fall/Ent1ty", action = "control_cars_entity"},
+    {name = "R3mote P3d", action = "remote_ped"},
+    {name = "Blade Play3r", action = "blaze_player"},
+    {name = "P4rticle Sp4wner", action = "particle_spawner"},
+    {name = "Sp3ctate Play3r", action = "spectate"},
+    {name = "Toy C4r", action = "rc_car"}
+}
+local selectedOptionIndex = 8 
+local scaleAnimation = 0.25
+local targetScale = 0.25
+local lastBlazeTime = 0
 
-            local stopFreecam, startFreecam
 
-            -- Feature Definitions (Now with Ped Spawner)
-            local Features = { 
-                "Look-Around", 
-                "Spawn Ped",         -- ADDED
-                "Teleport", 
-                "Delete Entity", 
-                "Fling Entity", 
-                "Flip Vehicle", 
-                "Launch Vehicle",
-                "Teleport Vehicle",
-                "Mess With Vehicle"
-            }
-
-            -- Helper Function for Drawing Text
-            local function drawText(content, x, y, options)
-                SetTextFont(options.font or 4)
-                SetTextScale(0.0, options.scale or 0.3)
-                SetTextColour(options.color[1], options.color[2], options.color[3], options.color[4])
-                SetTextOutline()
-                if options.shadow then SetTextDropShadow(2, 0, 0, 0, 255) end
-                SetTextCentre(true)
-                BeginTextCommandDisplayText("STRING")
-                AddTextComponentSubstringPlayerName(content)
-                EndTextCommandDisplayText(x, y)
-            end
-
-            -- Main Draw Thread (UI Only)
-            local function drawThread()
-                while isFreecamActive do
-                    Wait(0)
-                    -- Draw Crosshair
-                    drawText("•", 0.5, 0.485, {font = 4, scale = 0.5, color = {255,255,255,200}})
-                    
-                    -- ##### UI FIX: SCROLLING MENU LOGIC #####
-                    local ui = { x = 0.5, y = 0.75, lineHeight = 0.03, maxVisible = 7, colors = { text = {245, 245, 245, 120}, selected = {52, 152, 219, 255} } }
-                    local numFeatures = #Features
-                    local startIdx, endIdx = 1, numFeatures
-
-                    if numFeatures > ui.maxVisible then
-                        startIdx = math.max(1, currentFeatureIndex - math.floor(ui.maxVisible / 2))
-                        endIdx = math.min(numFeatures, startIdx + ui.maxVisible - 1)
-                        if endIdx == numFeatures then
-                            startIdx = numFeatures - ui.maxVisible + 1
-                        end
-                    end
-
-                    -- Draw a counter above the list
-                    drawText(("%d/%d"):format(currentFeatureIndex, numFeatures), ui.x, ui.y - 0.035, {scale = 0.25, color = {255,255,255,120}})
-
-                    local displayCount = 0
-                    for i = startIdx, endIdx do
-                        local featureName = Features[i]
-                        local isSelected = (i == currentFeatureIndex)
-                        local lineY = ui.y + (displayCount * ui.lineHeight)
-                        if isSelected then
-                            drawText(("[ %s ]"):format(featureName), ui.x, lineY, {scale = 0.32, color = ui.colors.selected, shadow = true})
-                        else
-                            drawText(featureName, ui.x, lineY, {scale = 0.28, color = ui.colors.text})
-                        end
-                        displayCount = displayCount + 1
-                    end
-                end
-            end
-
-            -- Main Input and Logic Thread
-            local function logicThread()
-                while isFreecamActive do
-                    Wait(0)
-                    if IsDisabledControlJustPressed(0, 241) then currentFeatureIndex = (currentFeatureIndex - 2 + #Features) % #Features + 1 elseif IsDisabledControlJustPressed(0, 242) then currentFeatureIndex = (currentFeatureIndex % #Features) + 1 end
-                    
-                    if IsDisabledControlJustPressed(0, 24) then -- Action Key Pressed
-                        local currentFeature = Features[currentFeatureIndex]
-                        if currentFeature == "Teleport" and targetCoords then
-                            local ped = PlayerPedId()
-                            local _, z = GetGroundZFor_3dCoord(targetCoords.x, targetCoords.y, targetCoords.z + 1.0, false)
-                            SetEntityCoords(ped, targetCoords.x, targetCoords.y, z and z + 1.0 or targetCoords.z, false, false, false, true)
-                        -- ##### NEW FEATURE: SAFE PED SPAWNER LOGIC #####
-                        elseif currentFeature == "Spawn Ped" and targetCoords then
-                            local model = pedsToSpawn[currentPedIndex]
-                            CreateThread(function()
-                                local modelHash = GetHashKey(model)
-                                RequestModel(modelHash)
-                                local timeout = 2000 -- 2 second timeout for model loading
-                                while not HasModelLoaded(modelHash) and timeout > 0 do
-                                    Wait(100)
-                                    timeout = timeout - 100
-                                end
-                                if HasModelLoaded(modelHash) then
-                                    local _, z = GetGroundZFor_3dCoord(targetCoords.x, targetCoords.y, targetCoords.z, false)
-                                    local spawnPos = vector3(targetCoords.x, targetCoords.y, z and z + 1.0 or targetCoords.z)
-                                    local newPed = CreatePed(4, modelHash, spawnPos.x, spawnPos.y, spawnPos.z, 0.0, true, true)
-                                    SetModelAsNoLongerNeeded(modelHash)
-                                    TaskStandStill(newPed, -1) -- Make them stand still
-                                    currentPedIndex = (currentPedIndex % #pedsToSpawn) + 1 -- Cycle to the next ped for next time
-                                end
-                            end)
-                        elseif currentFeature == "Delete Entity" and targetEntity and DoesEntityExist(targetEntity) then
-                            SetEntityAsMissionEntity(targetEntity, true, true)
-                            DeleteEntity(targetEntity)
-                        elseif currentFeature == "Fling Entity" and targetEntity and (IsEntityAPed(targetEntity) or IsEntityAVehicle(targetEntity)) then
-                            ApplyForceToEntity(targetEntity, 1, math.random(-50.0, 50.0), math.random(-50.0, 50.0), 50.0, 0.0, 0.0, 0.0, 0, true, true, true, false, true)
-                        elseif currentFeature == "Flip Vehicle" and targetEntity and IsEntityAVehicle(targetEntity) then
-                            SetVehicleOnGroundProperly(targetEntity)
-                        elseif currentFeature == "Launch Vehicle" and targetEntity and IsEntityAVehicle(targetEntity) then
-                            ApplyForceToEntity(targetEntity, 1, 0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 0, true, true, true, false, true)
-                        elseif currentFeature == "Teleport Vehicle" and targetEntity and IsEntityAVehicle(targetEntity) then
-                            local currentCoords = GetEntityCoords(targetEntity)
-                            local newCoords = currentCoords + GetEntityForwardVector(targetEntity) * 5.0 + vector3(0.0, 0.0, 50.0)
-                            SetEntityCoords(targetEntity, newCoords.x, newCoords.y, newCoords.z, false, false, false, true)
-                        elseif currentFeature == "Mess With Vehicle" and targetEntity and IsEntityAVehicle(targetEntity) then
-                            local actions = {
-                                function(veh) SetVehicleTyreBurst(veh, math.random(0, 5), false, 1000.0) end,
-                                function(veh) SetVehicleDoorOpen(veh, math.random(0, 5), false, false) end,
-                                function(veh) SetVehicleEngineOn(veh, not IsVehicleEngineOn(veh), false, true) end,
-                                function(veh) SetVehicleLights(veh, math.random(0, 2)) end,
-                                function(veh) StartVehicleHorn(veh, 1000, "HELDDOWN", false) end
-                            }
-                            local randomAction = actions[math.random(#actions)]
-                            randomAction(targetEntity)
-                        end
-                    end
-                end
-            end
-
-            -- Main Camera Movement Thread (Unchanged)
-            local function cameraThread()
-                local baseSpeed, boostSpeed, slowSpeed = 1.0, 9.0, 0.1; local mouseSensitivity = 7.5; local function clamp(val, min, max) return math.max(min, math.min(max, val)) end; local function rotToDir(rot) local rX, rZ = math.rad(rot.x), math.rad(rot.z); return vector3(-math.sin(rZ)*math.cos(rX), math.cos(rZ)*math.cos(rX), math.sin(rX)) end;
-                while isFreecamActive do
-                    Wait(0)
-                    local camPos, camRotRaw = GetCamCoord(freecamHandle), GetCamRot(freecamHandle, 2); local camRot = { x = camRotRaw.x, y = camRotRaw.y, z = camRotRaw.z }; local direction = rotToDir(camRot); local right = vector3(direction.y, -direction.x, 0)
-                    local speed = baseSpeed; if IsDisabledControlPressed(0, 21) then speed = boostSpeed end; if IsDisabledControlPressed(0, 19) then speed = slowSpeed end
-                    if IsDisabledControlPressed(0, 32) then camPos = camPos + direction * speed end; if IsDisabledControlPressed(0, 33) then camPos = camPos - direction * speed end; if IsDisabledControlPressed(0, 34) then camPos = camPos - right * speed end; if IsDisabledControlPressed(0, 35) then camPos = camPos + right * speed end; if IsDisabledControlPressed(0, 22) then camPos = camPos + vector3(0, 0, 1.0) * speed end; if IsDisabledControlPressed(0, 36) then camPos = camPos - vector3(0, 0, 1.0) * speed end
-                    local mX, mY = GetControlNormal(0,1)*mouseSensitivity, GetControlNormal(0,2)*mouseSensitivity; camRot.x = clamp(camRot.x-mY, -89.0, 89.0); camRot.z = camRot.z-mX
-                    SetCamCoord(freecamHandle, camPos.x, camPos.y, camPos.z); SetCamRot(freecamHandle, camRot.x, camRot.y, camRot.z, 2); SetFocusPosAndVel(camPos.x, camPos.y, camPos.z, 0.0, 0.0, 0.0)
-                    local ray = StartShapeTestRay(camPos.x, camPos.y, camPos.z, camPos.x+direction.x*1000.0, camPos.y+direction.y*1000.0, camPos.z+direction.z*1000.0, -1, PlayerPedId(), 7); local _, hit, coords, _, entity = GetShapeTestResult(ray); if hit then targetCoords, targetEntity = coords, entity else targetCoords, targetEntity = nil, nil end
-                end
-            end
-            
-            startFreecam = function()
-                if isFreecamActive then return end
-                isFreecamActive = true
-                local startPos, startRot, startFov = GetGameplayCamCoord(), GetGameplayCamRot(2), GetGameplayCamFov()
-                freecamHandle = CreateCamWithParams("DEFAULT_SCRIPTED_CAMERA", startPos.x, startPos.y, startPos.z, startRot.x, startRot.y, startRot.z, startFov, true, 2)
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
+        if freeCamActive and selectedOptionIndex == 8 then 
+  
+            if showText then
+                local camPos = GetCamCoord(freeCam)
+                local camRot = GetCamRot(freeCam, 2)
+                local forward = RotToDirection(camRot)
+                local textPos = vector3(camPos.x + forward.x * 1.0, camPos.y + forward.y * 1.0, camPos.z + forward.z * 1.0)
                 
-                if not DoesCamExist(freecamHandle) then isFreecamActive = false; return end
-
-                RenderScriptCams(true, false, 0, true, true)
-                SetCamActive(freecamHandle, true)
-                CreateThread(drawThread)
-                CreateThread(logicThread)
-                CreateThread(cameraThread)
+               
+                DrawRect3D(textPos.x, textPos.y, textPos.z, 0.2, 0.05, 0.0, 0, 0, 0, 150)
+                
+             
+                DrawText3D(textPos.x, textPos.y, textPos.z, "[F] CHANGE CAR", 0.2)
             end
 
-            stopFreecam = function()
-                if not isFreecamActive then return end
-                isFreecamActive = false
-                if freecamHandle and DoesCamExist(freecamHandle) then SetCamActive(freecamHandle, false); RenderScriptCams(false, false, 0, true, true); DestroyCam(freecamHandle, false) end
-                Wait(10); SetFocusEntity(PlayerPedId()); ClearFocus()
-                freecamHandle = nil
-            end
-            
-            CreateThread(function()
-                while g_FreecamFeatureEnabled and not Unloaded do Wait(0)
-                    if IsDisabledControlJustPressed(0, 74) then -- H key
-                        if isFreecamActive then stopFreecam()
-                        else startFreecam() end
+        
+            if IsControlJustPressed(0, 231414141) then 
+                showText = true
+                AddTextEntry('FMMC_KEY_TIP1', "")
+                DisplayOnscreenKeyboard(1, "FMMC_KEY_TIP1", "", "", "", "", "", 13)
+                while UpdateOnscreenKeyboard() == 0 do
+                    Citizen.Wait(0)
+                end
+                if UpdateOnscreenKeyboard() == 1 then
+                    local inputText = GetOnscreenKeyboardResult()
+                    if inputText and inputText ~= "" then
+                        local newModel = GetHashKey(inputText)
+                        if IsModelInCdimage(newModel) and IsModelAVehicle(newModel) then
+                            vehicleModel = newModel
+             
+                        else
+               
+                        end
                     end
+                end
+                showText = false
+            end
+        end
+    end
+end)
+
+
+function DrawText3D(x, y, z, text, scale)
+    SetTextScale(scale, scale)
+    SetTextFont(0)
+    SetTextProportional(1)
+    SetTextColour(255, 255, 255, 255)
+    SetTextDropShadow(0, 0, 0, 0, 255)
+    SetTextEdge(2, 0, 0, 0, 255)
+    SetTextDropShadow()
+    SetTextOutline()
+    SetTextCentre(1)
+    BeginTextCommandDisplayText("STRING")
+    AddTextComponentSubstringPlayerName(text)
+    SetDrawOrigin(x, y, z, 0)
+    EndTextCommandDisplayText(0.0, 0.0)
+    ClearDrawOrigin()
+end
+
+
+function DrawRect3D(x, y, z, width, height, depth, r, g, b, a)
+    local halfWidth = width / 2
+    local halfHeight = height / 2
+    local vertices = {
+        vector3(x - halfWidth, y - halfHeight, z),
+        vector3(x + halfWidth, y - halfHeight, z),
+        vector3(x + halfWidth, y + halfHeight, z),
+        vector3(x - halfWidth, y + halfHeight, z)
+    }
+    DrawPoly(vertices[1].x, vertices[1].y, vertices[1].z, vertices[2].x, vertices[2].y, vertices[2].z, vertices[3].x, vertices[3].y, vertices[3].z, r, g, b, a)
+    DrawPoly(vertices[3].x, vertices[3].y, vertices[3].z, vertices[4].x, vertices[4].y, vertices[4].z, vertices[1].x, vertices[1].y, vertices[1].z, r, g, b, a)
+end
+
+function DisablePlayerControls()
+    if not freeCamActive then return end
+
+    DisableControlAction(0, 30, true)
+    DisableControlAction(0, 31, true)
+    DisableControlAction(0, 36, true)
+    DisableControlAction(0, 22, true)
+    DisableControlAction(0, 44, true)
+    DisableControlAction(0, 140, true)
+    DisableControlAction(0, 141, true)
+    DisableControlAction(0, 142, true)
+    DisableControlAction(0, 143, true)
+    DisableControlAction(0, 37, true)
+    DisableControlAction(0, 23, true)
+end
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
+        if freeCamActive then
+            HandleFreecamActions()
+            DisablePlayerControls()
+            UpdateControlledEntity()
+            UpdateControlledRCCar()
+            local camCoords = GetCamCoord(freeCam)
+            SetFocusPosAndVel(camCoords.x, camCoords.y, camCoords.z, 0.0, 0.0, 0.0)
+            SetCamFarClip(freeCam, 15000.0)
+            OverrideLodscaleThisFrame(2.0)
+        end
+    end
+end)
+
+function IsPlayerNearVehicle(vehicle, distance)
+    distance = distance or 5.0
+    local vehicleCoords = GetEntityCoords(vehicle)
+    
+    for i = 0, 900 do 
+        if NetworkIsPlayerActive(i) then
+            local targetPed = GetPlayerPed(i)
+            if DoesEntityExist(targetPed) then
+                local playerCoords = GetEntityCoords(targetPed)
+                local dist = #(vehicleCoords - playerCoords)
+                if dist <= distance then
+                    return true, i 
+                end
+            end
+        end
+    end
+    return false, -1
+end
+
+function ActivateFreecam()
+    freeCamActive = true
+    playerPed = PlayerPedId()
+    local gameplay_cam_coords = GetGameplayCamCoord()
+    local gameplay_cam_rot = GetGameplayCamRot()
+    freeCam = CreateCamWithParams("DEFAULT_SCRIPTED_CAMERA", gameplay_cam_coords.x, gameplay_cam_coords.y, gameplay_cam_coords.z, gameplay_cam_rot.x, gameplay_cam_rot.y, gameplay_cam_rot.z, 70.0)
+    SetCamActive(freeCam, true)
+    RenderScriptCams(true, true, 200, false, false)
+    SetFocusPosAndVel(gameplay_cam_coords.x, gameplay_cam_coords.y, gameplay_cam_coords.z, 0.0, 0.0, 0.0)
+end
+
+function DeactivateFreecam()
+    freeCamActive = false
+    RenderScriptCams(false, true, 200, false, false)
+    DestroyCam(freeCam, false)
+    SetEntityVisible(playerPed, true, true)
+    FreezeEntityPosition(playerPed, false)
+    SetFocusEntity(playerPed)
+    freeCam = nil
+    SetTimeScale(1.0)
+    if isControllingEntity then
+        ReleaseControlledEntity()
+    end
+    if isControllingRemotePed then
+        ReleaseRemotePed()
+    end
+    if isControllingRCCar then
+        ReleaseRCCar()
+    end
+end
+
+function HandleFreecamMovement()
+    if not freeCamActive or not freeCam then return end
+
+    local currentSpeed = freeCamSpeed
+    if IsControlPressed(0, 21) then
+        currentSpeed = freeCamSpeed * boostMultiplier
+    end
+
+    if IsControlPressed(0, 32) then
+        local camCoords = GetCamCoord(freeCam)
+        local camRot = GetCamRot(freeCam, 2)
+        local forward = RotToDirection(camRot)
+        SetCamCoord(freeCam, camCoords.x + forward.x * currentSpeed, camCoords.y + forward.y * currentSpeed, camCoords.z + forward.z * currentSpeed)
+    end
+
+    if IsControlPressed(0, 33) then
+        local camCoords = GetCamCoord(freeCam)
+        local camRot = GetCamRot(freeCam, 2)
+        local forward = RotToDirection(camRot)
+        SetCamCoord(freeCam, camCoords.x - forward.x * currentSpeed, camCoords.y - forward.y * currentSpeed, camCoords.z - forward.z * currentSpeed)
+    end
+
+    if IsControlPressed(0, 34) then
+        local camCoords = GetCamCoord(freeCam)
+        local camRot = GetCamRot(freeCam, 2)
+        local right = RotToRight(camRot)
+        SetCamCoord(freeCam, camCoords.x - right.x * currentSpeed, camCoords.y - right.y * currentSpeed, camCoords.z - right.z * currentSpeed)
+    end
+
+    if IsControlPressed(0, 35) then
+        local camCoords = GetCamCoord(freeCam)
+        local camRot = GetCamRot(freeCam, 2)
+        local right = RotToRight(camRot)
+        SetCamCoord(freeCam, camCoords.x + right.x * currentSpeed, camCoords.y + right.y * currentSpeed, camCoords.z + right.z * currentSpeed)
+    end
+
+    local camRot = GetCamRot(freeCam, 2)
+    local rotationSpeed = 2.0
+    if IsControlPressed(0, 44) then
+        SetCamRot(freeCam, camRot.x, 0.0, camRot.z + rotationSpeed, 2)
+    end
+    if IsControlPressed(0, 38) then
+        SetCamRot(freeCam, camRot.x, 0.0, camRot.z - rotationSpeed, 2)
+    end
+
+    local x, y = GetDisabledControlNormal(0, 1), GetDisabledControlNormal(0, 2)
+    SetCamRot(freeCam, camRot.x - y * mouseSensitivity, 0.0, camRot.z - x * mouseSensitivity, 2)
+end
+
+function UpdateControlledEntity()
+    if not freeCamActive or not isControllingEntity or not DoesEntityExist(controlledEntity) then
+        return
+    end
+
+    local camCoords = GetCamCoord(freeCam)
+    local camRot = GetCamRot(freeCam, 2)
+    local forward = RotToDirection(camRot)
+    local targetPos = camCoords + forward * 5.0
+
+    if IsDisabledControlPressed(0, 24) then
+        NetworkRequestControlOfEntity(controlledEntity)
+        if NetworkHasControlOfEntity(controlledEntity) then
+            local groundZ = GetGroundZFor_3dCoord(targetPos.x, targetPos.y, targetPos.z + 1000.0, false)
+            if groundZ then
+                targetPos = vector3(targetPos.x, targetPos.y, math.max(targetPos.z, groundZ + 1.0))
+            end
+            SetEntityCoordsNoOffset(controlledEntity, targetPos.x, targetPos.y, targetPos.z, true, true, true)
+            SetEntityRotation(controlledEntity, camRot.x, camRot.y, camRot.z, 2, true)
+            SetEntityVelocity(controlledEntity, 0.0, 0.0, 0.0)
+            SetEntityCollision(controlledEntity, false, false)
+            if GetEntityType(controlledEntity) == 1 then
+                ClearPedTasksImmediately(controlledEntity)
+                SetPedConfigFlag(controlledEntity, 184, true)
+            elseif GetEntityType(controlledEntity) == 2 then
+                SetVehicleGravity(controlledEntity, false)
+                for i = -1, GetVehicleMaxNumberOfPassengers(controlledEntity) - 1 do
+                    local occupant = GetPedInVehicleSeat(controlledEntity, i)
+                    if DoesEntityExist(occupant) and IsPedAPlayer(occupant) then
+                        ClearPedTasksImmediately(occupant)
+                        SetPedConfigFlag(occupant, 184, true)
+                    end
+                end
+            end
+        end
+        Citizen.Wait(0)
+    else
+        ReleaseControlledEntity()
+    end
+end
+
+function UpdateControlledRCCar()
+    if not freeCamActive or not isControllingRCCar or not DoesEntityExist(controlledRCCar) then
+        return
+    end
+
+    local camCoords = GetCamCoord(freeCam)
+    local camRot = GetCamRot(freeCam, 2)
+    local forward = RotToDirection(camRot)
+    local carCoords = GetEntityCoords(controlledRCCar)
+
+    NetworkRequestControlOfEntity(controlledRCCar)
+    if NetworkHasControlOfEntity(controlledRCCar) then
+        local speed = 0.0
+        local turn = 0.0
+
+        if IsDisabledControlPressed(0, 32) then
+            speed = 20.0
+        elseif IsDisabledControlPressed(0, 33) then
+            speed = -10.0
+        end
+
+        if IsDisabledControlPressed(0, 34) then
+            turn = 45.0
+        elseif IsDisabledControlPressed(0, 35) then
+            turn = -45.0
+        end
+
+        ApplyForceToEntity(controlledRCCar, 1, 0.0, 0.0, -15.0, 0.0, 0.0, 0.0, 0, false, true, true, false, true)
+
+        if IsDisabledControlPressed(0, 24) then
+            local targetPoint = GetTargetPoint(camCoords, camRot)
+            ShootSingleBulletBetweenCoords(
+                carCoords.x, carCoords.y, carCoords.z + 0.5,
+                targetPoint.x, targetPoint.y, targetPoint.z,
+                50,
+                true,
+                GetHashKey("WEAPON_APPISTOL"),
+                playerPed,
+                true,
+                false,
+                -1.0
+            )
+        end
+
+        if IsDisabledControlPressed(0, 23) then
+            local carPos = GetEntityCoords(controlledRCCar)
+            AddExplosion(carPos.x, carPos.y, carPos.z, 6, 5.0, true, false, 1.0)
+            Citizen.CreateThread(function()
+                Citizen.Wait(0)
+                if DoesEntityExist(controlledRCCar) then
+                    SetEntityAsNoLongerNeeded(controlledRCCar)
+                    ReleaseRCCar()
                 end
             end)
         end
+
+        SetVehicleForwardSpeed(controlledRCCar, speed)
+        SetVehicleSteeringAngle(controlledRCCar, turn)
+
+        local x, y = GetDisabledControlNormal(0, 1), GetDisabledControlNormal(0, 2)
+        SetCamRot(freeCam, camRot.x - y * mouseSensitivity, 0.0, camRot.z - x * mouseSensitivity, 2)
+        local camForward = RotToDirection(GetCamRot(freeCam, 2))
+        local camPos = carCoords - (camForward * 2.5) + vector3(0.0, 0.0, 0.8)
+        SetCamCoord(freeCam, camPos.x, camPos.y, camPos.z)
+        SetEntityHeading(controlledRCCar, camRot.z)
+    end
+end
+
+function GrabNearestEntity(camCoords)
+    local closestEntity = nil
+    local closestDistance = 10.0
+    local entityType = nil
+
+  
+    local vehicles = GetGamePool('CVehicle')
+    for _, vehicle in ipairs(vehicles) do
+        if DoesEntityExist(vehicle) then
+            local vehicleCoords = GetEntityCoords(vehicle)
+            local distance = #(vector3(camCoords.x, camCoords.y, camCoords.z) - vehicleCoords)
+            if distance < closestDistance then
+                closestDistance = distance
+                closestEntity = vehicle
+                entityType = 2
+            end
+        end
+    end
+
+  
+    local objectsPool = GetGamePool('CObject')
+    for _, obj in ipairs(objectsPool) do
+        if DoesEntityExist(obj) then
+            local objCoords = GetEntityCoords(obj)
+            local distance = #(vector3(camCoords.x, camCoords.y, camCoords.z) - objCoords)
+            if distance < closestDistance then
+                closestDistance = distance
+                closestEntity = obj
+                entityType = 3
+            end
+        end
+    end
+
+    
+    local peds = GetGamePool('CPed')
+    for _, ped in ipairs(peds) do
+        if DoesEntityExist(ped) and not IsPedAPlayer(ped) and GetEntityHealth(ped) > 0 then
+            local pedCoords = GetEntityCoords(ped)
+            local distance = #(vector3(camCoords.x, camCoords.y, camCoords.z) - pedCoords)
+            if distance < closestDistance then
+                closestDistance = distance
+                closestEntity = ped
+                entityType = 1
+            end
+        end
+    end
+
+    if closestEntity and DoesEntityExist(closestEntity) then
+        local attempts = 0
+        local maxAttempts = 50
+        NetworkRequestControlOfEntity(closestEntity)
+        while not NetworkHasControlOfEntity(closestEntity) and attempts < maxAttempts do
+            NetworkRequestControlOfEntity(closestEntity)
+            attempts = attempts + 1
+            Citizen.Wait(10)
+        end
+        if NetworkHasControlOfEntity(closestEntity) then
+            controlledEntity = closestEntity
+            isControllingEntity = true
+            SetEntityAsMissionEntity(controlledEntity, true, true)
+            SetEntityCollision(controlledEntity, false, false)
+            if entityType == 1 then
+                ClearPedTasksImmediately(controlledEntity)
+                SetPedConfigFlag(controlledEntity, 184, true)
+            elseif entityType == 2 then
+                SetVehicleGravity(controlledEntity, false)
+                for i = -1, GetVehicleMaxNumberOfPassengers(controlledEntity) - 1 do
+                    local occupant = GetPedInVehicleSeat(controlledEntity, i)
+                    if DoesEntityExist(occupant) and IsPedAPlayer(occupant) then
+                        ClearPedTasksImmediately(occupant)
+                        SetPedConfigFlag(occupant, 184, true)
+                    end
+                end
+                SetVehicleOnGroundProperly(controlledEntity)
+            end
+            return true
+        end
+    end
+    return false
+end
+
+function ReleaseControlledEntity()
+    if controlledEntity and DoesEntityExist(controlledEntity) then
+        local camRot = GetCamRot(freeCam, 2)
+        local forward = RotToDirection(camRot)
+        SetEntityCollision(controlledEntity, true, true)
+        SetEntityAsMissionEntity(controlledEntity, false, false)
+        SetEntityVelocity(controlledEntity, forward.x * 10.0, forward.y * 10.0, forward.z * 10.0)
+        if GetEntityType(controlledEntity) == 1 then
+            SetPedConfigFlag(controlledEntity, 184, false)
+            ClearPedTasksImmediately(controlledEntity)
+        elseif GetEntityType(controlledEntity) == 2 then
+            SetVehicleGravity(controlledEntity, true)
+            for i = -1, GetVehicleMaxNumberOfPassengers(controlledEntity) - 1 do
+                local occupant = GetPedInVehicleSeat(controlledEntity, i)
+                if DoesEntityExist(occupant) and IsPedAPlayer(occupant) then
+                    SetPedConfigFlag(occupant, 184, false)
+                    ClearPedTasksImmediately(occupant)
+                end
+            end
+            SetVehicleOnGroundProperly(controlledEntity)
+        end
+        controlledEntity = nil
+        isControllingEntity = false
+    end
+end
+
+function RotToDirection(rotation)
+    local radZ = math.rad(rotation.z)
+    local radX = math.rad(rotation.x)
+    local cosX = math.cos(radX)
+    return vector3(-math.sin(radZ) * cosX, math.cos(radZ) * cosX, math.sin(radX))
+end
+
+function RotToRight(rotation)
+    local radZ = math.rad(rotation.z)
+    return vector3(math.cos(radZ), math.sin(radZ), 0)
+end
+
+function GetTargetPoint(camCoords, camRot)
+    local forward = RotToDirection(camRot)
+    local target = camCoords + forward * 300.0
+    local rayHandle = StartShapeTestRay(camCoords.x, camCoords.y, camCoords.z, target.x, target.y, target.z, -1, playerPed, 0)
+    local _, hit, endCoords, _, _ = GetShapeTestResult(rayHandle)
+    if hit then
+        return endCoords
+    else
+        return target
+    end
+end
+
+function SpawnRCCar(camCoords, camRot)
+    local rcModel = GetHashKey("rcbandito")
+    RequestModel(rcModel)
+    local timeout = 1000
+    local startTime = GetGameTimer()
+
+    while not HasModelLoaded(rcModel) and (GetGameTimer() - startTime < timeout) do
+        Citizen.Wait(0)
+    end
+
+    if HasModelLoaded(rcModel) then
+        local forward = RotToDirection(camRot)
+        local targetPoint = GetTargetPoint(camCoords, camRot)
+        local spawnPos = targetPoint
+
+        local foundGround, groundZ = GetGroundZFor_3dCoord(spawnPos.x, spawnPos.y, spawnPos.z + 1000.0, false)
+        if foundGround then
+            spawnPos = vector3(spawnPos.x, spawnPos.y, groundZ + 0.3)
+        else
+            local rayHandle = StartShapeTestRay(spawnPos.x, spawnPos.y, spawnPos.z + 1000.0, spawnPos.x, spawnPos.y, spawnPos.z - 1000.0, 1, 0, 0)
+            local _, hit, endCoords, _, _ = GetShapeTestResult(rayHandle)
+            if hit then
+                spawnPos = vector3(spawnPos.x, spawnPos.y, endCoords.z + 0.3)
+            else
+                spawnPos = vector3(spawnPos.x, spawnPos.y, spawnPos.z + 0.3)
+            end
+        end
+
+        local rcCar = CreateVehicle(rcModel, spawnPos.x, spawnPos.y, spawnPos.z, camRot.z, true, false)
+        if DoesEntityExist(rcCar) then
+            NetworkRequestControlOfEntity(rcCar)
+            local attempts = 0
+            local maxAttempts = 50
+            while not NetworkHasControlOfEntity(rcCar) and attempts < maxAttempts do
+                NetworkRequestControlOfEntity(rcCar)
+                attempts = attempts + 1
+                Citizen.Wait(0)
+            end
+
+            if NetworkHasControlOfEntity(rcCar) then
+                controlledRCCar = rcCar
+                isControllingRCCar = true
+                SetEntityAsMissionEntity(controlledRCCar, true, true)
+                SetVehicleEngineOn(controlledRCCar, true, true, false)
+                SetVehicleOnGroundProperly(controlledRCCar)
+                SetEntityCollision(controlledRCCar, true, true)
+                SetVehicleGravity(controlledRCCar, true)
+                
+                ApplyForceToEntity(controlledRCCar, 1, 0.0, 0.0, -2.0, 0.0, 0.0, 0.0, 0, false, true, true, false, true)
+                SetModelAsNoLongerNeeded(rcModel)
+                return true
+            else
+                DeleteEntity(rcCar)
+            end
+        end
+        SetModelAsNoLongerNeeded(rcModel)
+    end
+    return false
+end
+
+function ReleaseRCCar()
+    if controlledRCCar and DoesEntityExist(controlledRCCar) then
+        SetEntityAsMissionEntity(controlledRCCar, false, false)
+        DeleteEntity(controlledRCCar)
+        controlledRCCar = nil
+        isControllingRCCar = false
+    end
+end
+
+function GrabNearestPed(camCoords)
+    local closestPed = nil
+    local closestDistance = 10.0
+    local peds = GetGamePool('CPed')
+
+    for _, ped in ipairs(peds) do
+        if DoesEntityExist(ped) and not IsPedAPlayer(ped) and IsPedHuman(ped) and GetEntityHealth(ped) > 0 then
+            local pedCoords = GetEntityCoords(ped)
+            local distance = #(vector3(camCoords.x, camCoords.y, camCoords.z) - pedCoords)
+            if distance < closestDistance then
+                closestDistance = distance
+                closestPed = ped
+            end
+        end
+    end
+
+    if closestPed and DoesEntityExist(closestPed) then
+        local attempts = 0
+        local maxAttempts = 100
+        NetworkRequestControlOfEntity(closestPed)
+        while not NetworkHasControlOfEntity(closestPed) and attempts < maxAttempts do
+            NetworkRequestControlOfEntity(closestPed)
+            attempts = attempts + 1
+            Citizen.Wait(10)
+        end
+
+        if NetworkHasControlOfEntity(closestPed) then
+            remotePed = closestPed
+            isControllingRemotePed = true
+            SetEntityAsMissionEntity(remotePed, true, true)
+            NetworkRegisterEntityAsNetworked(remotePed)
+            SetCanAttackFriendly(remotePed, true, false)
+            SetPedAlertness(remotePed, 0.0)
+            ClearPedTasks(remotePed)
+            ClearPedSecondaryTask(remotePed)
+            SetPedKeepTask(remotePed, false)
+            SetPedCombatAttributes(remotePed, 46, true)
+            SetPedCombatAttributes(remotePed, 5, true)
+
+            RemoveAllPedWeapons(remotePed, true)
+
+            local weaponHash = (selectedOptionIndex == 1 and GetHashKey(weapons[currentWeaponIndex])) or GetHashKey("WEAPON_ASSAULTRIFLE")
+            GiveWeaponToPed(remotePed, weaponHash, 9999, false, true)
+            SetPedInfiniteAmmo(remotePed, true, weaponHash)
+            SetPedInfiniteAmmoClip(remotePed, true)
+            SetCurrentPedWeapon(remotePed, weaponHash, true)
+
+            SetPedAccuracy(remotePed, 100)
+            SetPedFiringPattern(remotePed, 0x7A845691)
+
+            Citizen.Wait(100)
+            if not IsPedArmed(remotePed, 7) then
+                GiveWeaponToPed(remotePed, weaponHash, 9999, false, true)
+                SetCurrentPedWeapon(remotePed, weaponHash, true)
+                SetPedAccuracy(remotePed, 100)
+                SetPedFiringPattern(remotePed, 0x7A845691)
+            end
+
+            return true
+        end
+    end
+    return false
+end
+
+function ReleaseRemotePed()
+    if remotePed and DoesEntityExist(remotePed) then
+        ClearPedTasks(remotePed)
+        SetEntityAsMissionEntity(remotePed, false, false)
+        SetPedKeepTask(remotePed, false)
+        local vehicle = GetVehiclePedIsIn(remotePed, false)
+        if vehicle and DoesEntityExist(vehicle) then
+            ClearVehicleTasks(vehicle)
+            SetVehicleEngineOn(vehicle, false, true, false)
+        end
+        remotePed = nil
+        isControllingRemotePed = false
+    end
+    if DoesEntityExist(playerPed) then
+        ClearPedTasks(playerPed)
+    end
+end
+
+function NPCHijackNearestVehicle()
+    local camCoords = GetCamCoord(freeCam)
+    local vehicle = GetClosestVehicle(camCoords.x, camCoords.y, camCoords.z, 10.0, 0, 70)
+
+    if DoesEntityExist(vehicle) then
+        for i = -1, GetVehicleMaxNumberOfPassengers(vehicle) - 1 do
+            local occupant = GetPedInVehicleSeat(vehicle, i)
+            if DoesEntityExist(occupant) then
+                ClearPedTasksImmediately(occupant)
+                TaskLeaveVehicle(occupant, vehicle, 16)
+                Citizen.Wait(100)
+            end
+        end
+
+        local pedModel = GetHashKey("mp_m_freemode_01")
+        RequestModel(pedModel)
+        while not HasModelLoaded(pedModel) do
+            Citizen.Wait(0)
+        end
+
+        local npc = CreatePedInsideVehicle(vehicle, 26, pedModel, -1, true, false)
+        if DoesEntityExist(npc) then
+            SetBlockingOfNonTemporaryEvents(npc, true)
+            SetPedCombatAttributes(npc, 46, true)
+            SetPedFleeAttributes(npc, 0, false)
+            SetPedConfigFlag(npc, 292, false)
+            SetPedConfigFlag(npc, 281, true)
+            SetDriverAbility(npc, 1.0)
+            SetDriverAggressiveness(npc, 1.0)
+            TaskVehicleDriveWander(npc, vehicle, 100.0, 787004)
+            SetVehicleEngineOn(vehicle, true, true, false)
+            SetVehicleForwardSpeed(vehicle, 3.0)
+            SetModelAsNoLongerNeeded(pedModel)
+        else
+            SetModelAsNoLongerNeeded(pedModel)
+        end
+    end
+end
+
+
+function GetTargetPoint(camCoords, camRot)
+    local forward = RotToDirection(camRot)
+    local target = camCoords + forward * 300.0
+    local rayHandle = StartShapeTestRay(camCoords.x, camCoords.y, camCoords.z, target.x, target.y, target.z, -1, playerPed, 0)
+    local _, hit, endCoords, _, _ = GetShapeTestResult(rayHandle)
+    if hit then
+        return endCoords
+    else
+        return target
+    end
+end
+
+function HandleFreecamActions()
+    if not freeCamActive then return end
+
+    DisableControlAction(0, 24, true)
+
+    if IsDisabledControlJustPressed(0, 24) then
+        local camCoords = GetCamCoord(freeCam)
+        local camRot = GetCamRot(freeCam, 2)
+        local forward = RotToDirection(camRot)
+        local action = options[selectedOptionIndex].action
+        local targetPoint = GetTargetPoint(camCoords, camRot)
+
+        if isControllingRemotePed and action ~= "remote_ped" then
+            return
+        end
+
+        if action == "weapon" then
+            ShootSingleBulletBetweenCoords(camCoords.x, camCoords.y, camCoords.z, targetPoint.x, targetPoint.y, targetPoint.z, 250, true, GetHashKey(weapons[currentWeaponIndex]), playerPed, true, false, -1.0)
+
+        elseif action == "shoot_animals" then
+            local animalModel = GetHashKey(animals[math.random(1, #animals)])
+            RequestModel(animalModel)
+            local timeout = 1000
+            local startTime = GetGameTimer()
+
+            while not HasModelLoaded(animalModel) and (GetGameTimer() - startTime < timeout) do
+                Citizen.Wait(0)
+            end
+
+            if HasModelLoaded(animalModel) then
+                local animal = CreatePed(28, animalModel, camCoords.x + forward.x * 2.0, camCoords.y + forward.y * 2.0, camCoords.z + forward.z * 2.0, camRot.z, true, false)
+                if DoesEntityExist(animal) then
+                    SetEntityAsMissionEntity(animal, true, true)
+                    SetEntityCollision(animal, true, true)
+                    SetEntityVelocity(animal, forward.x * 50.0, forward.y * 50.0, forward.z * 50.0)
+                    SetPedFleeAttributes(animal, 0, false)
+                    SetModelAsNoLongerNeeded(animalModel)
+                else
+                    SetModelAsNoLongerNeeded(animalModel)
+                end
+            else
+                SetModelAsNoLongerNeeded(animalModel)
+            end
+
+        elseif action == "object" then
+            local objectModel = GetHashKey(objects[currentObjectIndex])
+            RequestModel(objectModel)
+            local timeout = 1000
+            local startTime = GetGameTimer()
+
+            while not HasModelLoaded(objectModel) and (GetGameTimer() - startTime < timeout) do
+                Citizen.Wait(0)
+            end
+
+            if HasModelLoaded(objectModel) then
+                local obj = CreateObject(objectModel, camCoords.x, camCoords.y, camCoords.z, true, true, false)
+                if DoesEntityExist(obj) then
+                    SetEntityCoordsNoOffset(obj, targetPoint.x, targetPoint.y, targetPoint.z, true, true, true)
+                    SetEntityHeading(obj, camRot.z)
+                    SetEntityVelocity(obj, forward.x * 50.0, forward.y * 50.0, forward.z * 50.0)
+                    SetModelAsNoLongerNeeded(objectModel)
+                else
+                    SetModelAsNoLongerNeeded(objectModel)
+                end
+            else
+                SetModelAsNoLongerNeeded(objectModel)
+            end
+
+        elseif action == "teleport" then
+            local playerPed = PlayerPedId() 
+            local teleportDuration = 1000 
+
+         
+
+      
+            RequestCollisionAtCoord(targetPoint.x, targetPoint.y, targetPoint.z)
+            while not HasCollisionLoadedAroundEntity(playerPed) do
+                Citizen.Wait(0)
+            end
+
+       
+            FreezeEntityPosition(playerPed, true)
+
+           
+            NewLoadSceneStartSphere(targetPoint.x, targetPoint.y, targetPoint.z, 50.0, 0)
+            Citizen.Wait(teleportDuration)
+
+           
+            SetEntityCoordsNoOffset(playerPed, targetPoint.x, targetPoint.y, targetPoint.z, false, false, false)
+            
+          
+            local camHeading = camRot.z
+            TaskLookAtCoord(playerPed, targetPoint.x + math.sin(math.rad(camHeading)), 
+                            targetPoint.y + math.cos(math.rad(camHeading)), targetPoint.z, 1000, 0, 2)
+
+         
+            FreezeEntityPosition(playerPed, false)
+
+        elseif action == "angry_ped" then
+            local pedModel = GetHashKey("mp_m_freemode_01")
+            RequestModel(pedModel)
+            local timeout = 1000
+            local startTime = GetGameTimer()
+
+            while not HasModelLoaded(pedModel) and (GetGameTimer() - startTime < timeout) do
+                Citizen.Wait(0)
+            end
+
+            if HasModelLoaded(pedModel) then
+                local ped = CreatePed(4, pedModel, camCoords.x + forward.x * 2.0, camCoords.y + forward.y * 2.0, camCoords.z, camRot.z, true, false)
+                if DoesEntityExist(ped) then
+                    local weaponHash = GetHashKey("WEAPON_PISTOL")
+                    GiveWeaponToPed(ped, weaponHash, 9999, false, true)
+                    SetPedInfiniteAmmo(ped, true, weaponHash)
+                    SetPedInfiniteAmmoClip(ped, true)
+                    SetCurrentPedWeapon(ped, weaponHash, true)
+                    Citizen.Wait(100)
+                    if not IsPedArmed(ped, 7) then
+                        GiveWeaponToPed(ped, weaponHash, 9999, false, true)
+                        SetCurrentPedWeapon(ped, weaponHash, true)
+                        SetPedAccuracy(ped, 100)
+                        SetPedShootRate(ped, 1000)
+                        SetPedCombatAttributes(ped, 46, true)
+                        SetPedCombatAttributes(ped, 5, true)
+                        SetPedCombatAttributes(ped, 0, false)
+                        SetPedFleeAttributes(ped, 0, false)
+                        SetPedCombatRange(ped, 2)
+                        SetPedCombatMovement(ped, 3)
+                        SetPedCombatAbility(ped, 100)
+                        SetPedSeeingRange(ped, 100.0)
+                        SetPedHearingRange(ped, 100.0)
+                        TaskCombatHatedTargetsAroundPed(ped, 100.0, 0)
+                    end
+                    SetPedCombatAttributes(ped, 46, true)
+                    SetPedFleeAttributes(ped, 0, false)
+                    TaskCombatHatedTargetsAroundPed(ped, 100.0, 0)
+                    SetEntityVelocity(ped, forward.x * 50.0, forward.y * 50.0, forward.z * 50.0)
+                    SetModelAsNoLongerNeeded(pedModel)
+                else
+                    SetModelAsNoLongerNeeded(pedModel)
+                end
+            else
+                SetModelAsNoLongerNeeded(pedModel)
+            end
+
+        elseif action == "attack_dog" then
+            local dogModel = GetHashKey("a_c_rottweiler")
+            RequestModel(dogModel)
+            local timeout = 1000
+            local startTime = GetGameTimer()
+
+            while not HasModelLoaded(dogModel) and (GetGameTimer() - startTime < timeout) do
+                Citizen.Wait(0)
+            end
+
+            if HasModelLoaded(dogModel) then
+                local dog = CreatePed(28, dogModel, camCoords.x + forward.x * 2.0, camCoords.y + forward.y * 2.0, camCoords.z, camRot.z, true, false)
+                if DoesEntityExist(dog) then
+                    SetEntityAsMissionEntity(dog, true, true)
+                    local dogGroup = GetHashKey("ATTACK_DOG_GROUP")
+                    AddRelationshipGroup("ATTACK_DOG_GROUP")
+                    SetPedRelationshipGroupHash(dog, dogGroup)
+                    SetRelationshipBetweenGroups(5, dogGroup, GetHashKey("PLAYER"))
+                    SetPedFleeAttributes(dog, 0, false)
+                    SetPedCombatAttributes(dog, 46, true)
+                    SetPedCombatAttributes(dog, 5, true)
+                    SetPedCombatRange(dog, 2)
+                    SetPedSeeingRange(dog, 100.0)
+                    SetPedHearingRange(dog, 100.0)
+                    SetEntityHealth(dog, 500)
+                    SetPedAsEnemy(dog, true)
+                    SetEntityVelocity(dog, forward.x * 15.0, forward.y * 15.0, forward.z * 15.0)
+
+                    local closestPlayer = nil
+                    local closestDistance = 1000.0
+                    for _, player in ipairs(GetActivePlayers()) do
+                        local targetPed = GetPlayerPed(player)
+                        if targetPed ~= playerPed then
+                            local targetCoords = GetEntityCoords(targetPed)
+                            local distance = #(vector3(camCoords.x, camCoords.y, camCoords.z) - targetCoords)
+                            if distance < closestDistance then
+                                closestDistance = distance
+                                closestPlayer = targetPed
+                            end
+                        end
+                    end
+
+                    if DoesEntityExist(closestPlayer) then
+                        TaskCombatPed(dog, closestPlayer, 0, 16)
+                    else
+                        TaskCombatHatedTargetsAroundPed(dog, 100.0, 0)
+                    end
+
+                    SetModelAsNoLongerNeeded(dogModel)
+                else
+                    SetModelAsNoLongerNeeded(dogModel)
+                end
+            else
+                SetModelAsNoLongerNeeded(dogModel)
+            end
+
+        elseif action == "npc_hijack_vehicle" then
+            NPCHijackNearestVehicle()
+
+        elseif action == "vehicle_spam" then
+function SpawnVehicleInCameraDirection(vehicleModel, camCoords, camRot, forward)
+
+    RequestModel(vehicleModel)
+    local timeout = 1000
+    local startTime = GetGameTimer()
+
+    while not HasModelLoaded(vehicleModel) and (GetGameTimer() - startTime < timeout) do
+        Citizen.Wait(10)
+    end
+
+    if not HasModelLoaded(vehicleModel) then
+        SetModelAsNoLongerNeeded(vehicleModel)
+        return false, "Failed to load vehicle model"
+    end
+
+
+    local vehicle = nil
+    Citizen.CreateThread(function()
+  
+        local spawnPos = vector3(camCoords.x + forward.x * 5.0, camCoords.y + forward.y * 5.0, camCoords.z + forward.z * 5.0)
+
+     
+        local groundZ = GetGroundZFor_3dCoord(spawnPos.x, spawnPos.y, spawnPos.z + 500.0)
+        if groundZ then
+            spawnPos.z = groundZ
+        end
+
+    
+        vehicle = CreateVehicle(vehicleModel, spawnPos.x, spawnPos.y, spawnPos.z, camRot.z, true, true)
+        if DoesEntityExist(vehicle) then
+   
+            SetEntityRotation(vehicle, camRot.x, camRot.y, camRot.z, 2, true)
+            SetEntityVelocity(vehicle, forward.x * 50.0, forward.y * 50.0, forward.z * 50.0) 
+            SetVehicleForwardSpeed(vehicle, 50.0) 
+            SetVehicleBodyHealth(vehicle, 1000.0)
+            SetVehicleEngineHealth(vehicle, 1000.0)
+            SetVehiclePetrolTankHealth(vehicle, 1000.0)
+            SetVehicleExplodesOnHighExplosionDamage(vehicle, false)
+            SetEntityCanBeDamagedByRelationshipGroup(vehicle, false, GetHashKey("PLAYER"))
+            SetVehicleDamageModifier(vehicle, 0.5) 
+            SetEntityAsMissionEntity(vehicle, true, true)
+            SetVehicleStrong(vehicle, true)
+
         
-        initializeFreecam()
+            Citizen.SetTimeout(5000, function()
+                if DoesEntityExist(vehicle) then
+                    DeleteEntity(vehicle)
+                end
+            end)
+        end
+        SetModelAsNoLongerNeeded(vehicleModel)
+    end)
+
+    return true, vehicle
+end
+        elseif action == "glitch_car" then
+            local bikeModel = GetHashKey("bmx")
+            RequestModel(bikeModel)
+            local timeout = 1000
+            local startTime = GetGameTimer()
+            while not HasModelLoaded(bikeModel) and (GetGameTimer() - startTime < timeout) do
+                Citizen.Wait(0)
+            end
+            if HasModelLoaded(bikeModel) then
+                local closestPlayer = nil
+                local closestDistance = 5.0
+                for _, player in ipairs(GetActivePlayers()) do
+                    local targetPed = GetPlayerPed(player)
+                    if targetPed ~= playerPed then
+                        local targetCoords = GetEntityCoords(targetPed)
+                        local distance = #(vector3(camCoords.x, camCoords.y, camCoords.z) - targetCoords)
+                        if distance < closestDistance then
+                            closestDistance = distance
+                            closestPlayer = targetPed
+                        end
+                    end
+                end
+                if DoesEntityExist(closestPlayer) then
+                    local playerPos = GetEntityCoords(closestPlayer)
+                    local spawnPos = vector3(playerPos.x, playerPos.y, playerPos.z)
+                    local bike = CreateVehicle(bikeModel, spawnPos.x, spawnPos.y, spawnPos.z, 0.0, true, false)
+                    if DoesEntityExist(bike) then
+                        NetworkRequestControlOfEntity(bike)
+                        local attempts = 0
+                        local maxAttempts = 1
+                        while not NetworkHasControlOfEntity(bike) and attempts < maxAttempts do
+                            NetworkRequestControlOfEntity(bike)
+                            attempts = attempts + 1
+                            Citizen.Wait(10)
+                        end
+                        if NetworkHasControlOfEntity(bike) then
+                            SetEntityAsMissionEntity(bike, true, true)
+                            SetEntityCompletelyDisableCollision(bike, false, true)
+                            SetEntityVisible(bike, false, false)
+                            SetEntityAlpha(bike, 0, false)
+                            SetVehicleEngineOn(bike, true, true, false)
+                            SetEntityInvincible(bike, true)
+                            SetVehicleCanBeVisiblyDamaged(bike, false)
+                            SetVehicleExplodesOnHighExplosionDamage(bike, false)
+                            SetEntityHealth(bike, 1000)
+                            SetVehicleBodyHealth(bike, 1000.0)
+                            SetVehicleEngineHealth(bike, 1000.0)
+                            SetVehiclePetrolTankHealth(bike, 1000.0)
+                            AttachEntityToEntity(bike, closestPlayer, GetPedBoneIndex(closestPlayer, 0x0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, true, true, true, 0, true)
+                            SetVehicleForwardSpeed(bike, 20.0)
+                            Citizen.CreateThread(function()
+                                while DoesEntityExist(bike) do
+                                    SetEntityHealth(bike, 1000)
+                                    SetVehicleBodyHealth(bike, 1000.0)
+                                    SetVehicleEngineHealth(bike, 1000.0)
+                                    SetVehiclePetrolTankHealth(bike, 1000.0)
+                                    SetEntityAlpha(bike, 0, false)
+                                    local bikePos = GetEntityCoords(bike)
+                                    local nearbyEntities = GetGameEntitiesInRadius(bikePos.x, bikePos.y, bikePos.z, 5.0)
+                                    for _, entity in ipairs(nearbyEntities) do
+                                        if entity ~= bike and entity ~= closestPlayer then
+                                            ApplyDamageToPed(entity, 50, false)
+                                            if IsEntityAVehicle(entity) then
+                                                SetVehicleEngineHealth(entity, GetVehicleEngineHealth(entity) - 50.0)
+                                            end
+                                        end
+                                    end
+                                    ApplyForceToEntity(closestPlayer, 1, 0.0, 0.0, -10.0, 0.0, 0.0, 0.0, 0, false, true, true, false, true)
+                                    Citizen.Wait(500)
+                                end
+                            end)
+                        else
+                            DeleteEntity(bike)
+                        end
+                    end
+                end
+                SetModelAsNoLongerNeeded(bikeModel)
+            end
+
+elseif action == "warp_into_vehicle" then
+
+    local function GetClosestVehicleIncludingPlayers(coords, maxDistance)
+        local closestVehicle = 0
+        local closestDistance = maxDistance
+        local handle, vehicle = FindFirstVehicle()
+        local success
+        
+        repeat
+            local vehCoords = GetEntityCoords(vehicle)
+            local distance = #(coords - vehCoords)
+            
+            if distance < closestDistance then
+                closestDistance = distance
+                closestVehicle = vehicle
+            end
+            
+            success, vehicle = FindNextVehicle(handle)
+        until not success
+        
+        EndFindVehicle(handle)
+        
+        return closestVehicle
+    end
+    
+
+    local vehicle = GetClosestVehicleIncludingPlayers(camCoords, 10.0)
+    
+    if DoesEntityExist(vehicle) then
+        local maxSeats = GetVehicleMaxNumberOfPassengers(vehicle)
+        local targetSeat = -1
+        local seatFound = false
+        local isPlayerVehicle = false
+        
+    
+        for i = 0, 255 do
+            if NetworkIsPlayerActive(i) then
+                local otherPlayer = GetPlayerPed(i)
+                if IsPedInVehicle(otherPlayer, vehicle, false) then
+                    isPlayerVehicle = true
+                    break
+                end
+            end
+        end
+        
+        if isPlayerVehicle then
+        
+            if IsVehicleSeatFree(vehicle, -1) then
+                targetSeat = -1
+                seatFound = true
+            else
+                for i = 0, maxSeats - 1 do
+                    if IsVehicleSeatFree(vehicle, i) then
+                        targetSeat = i
+                        seatFound = true
+                        break
+                    end
+                end
+            end
+        else
+        
+            local driverPed = GetPedInVehicleSeat(vehicle, -1)
+            if driverPed ~= 0 and not IsPedAPlayer(driverPed) then
+   
+                ClearPedTasksImmediately(driverPed)
+                TaskLeaveVehicle(driverPed, vehicle, 0)
+                Citizen.Wait(300)
+            end
+            targetSeat = -1
+            seatFound = true
+        end
+        
+        if seatFound then
+  
+            if GetVehiclePedIsIn(playerPed, false) ~= 0 then
+                ClearPedTasksImmediately(playerPed)
+                TaskLeaveVehicle(playerPed, GetVehiclePedIsIn(playerPed, false), 0)
+                Citizen.Wait(500)
+            end
+            
+            local vehCoords = GetEntityCoords(vehicle)
+            SetEntityCoords(playerPed, vehCoords.x, vehCoords.y, vehCoords.z + 1.0, false, false, false, true)
+            Citizen.Wait(100)
+            
+         
+            if IsVehicleSeatFree(vehicle, targetSeat) or targetSeat == -1 then
+                SetPedIntoVehicle(playerPed, vehicle, targetSeat)
+                SetEntityVisible(playerPed, true, true)
+                SetCamCoord(freeCam, vehCoords.x, vehCoords.y, vehCoords.z + 2.0)
+            else
+            
+                for i = 0, maxSeats - 1 do
+                    if IsVehicleSeatFree(vehicle, i) then
+                        SetPedIntoVehicle(playerPed, vehicle, i)
+                        SetEntityVisible(playerPed, true, true)
+                        SetCamCoord(freeCam, vehCoords.x, vehCoords.y, vehCoords.z + 2.0)
+                        break
+                    end
+                end
+            end
+        else
+     
+        end
+    else
+      
+    end
+
+        elseif action == "black_hole" then
+if IsDisabledControlPressed(0, 24) then
+    Citizen.CreateThread(function()
+        local affectedVehicles = {}
+        local lastForward = forward
+        local playerPed = PlayerPedId() 
+
+        while IsDisabledControlPressed(0, 24) do
+            local camPos = GetCamCoord(freeCam)
+            local camRot = GetCamRot(freeCam, 2)
+            lastForward = RotToDirection(camRot)
+            local targetPos = camPos + lastForward * 15.0
+            local nearbyVehicles = GetGameEntitiesInRadius(camPos.x, camPos.y, camPos.z, 100.0, 2) 
+
+            for _, vehicle in ipairs(nearbyVehicles) do
+                if DoesEntityExist(vehicle) and vehicle ~= controlledEntity and not IsEntityAPed(vehicle) and vehicle ~= GetVehiclePedIsIn(playerPed, false) then
+                    NetworkRequestControlOfEntity(vehicle)
+                    if NetworkHasControlOfEntity(vehicle) then
+                        SetEntityAsMissionEntity(vehicle, true, true)
+                        SetEntityCollision(vehicle, false, false)
+                        FreezeEntityPosition(vehicle, false)
+                        affectedVehicles[vehicle] = true
+
+                        local currentPos = GetEntityCoords(vehicle)
+                        local direction = targetPos - currentPos
+                        local distance = #(targetPos - currentPos)
+
+                        if distance > 0.1 then
+                            local forceStrength = 150.0 * (distance / 50.0 + 0.2) 
+                            local normalizedForce = direction / (distance + 0.01) * forceStrength
+                            SetEntityVelocity(vehicle, normalizedForce.x, normalizedForce.y, normalizedForce.z)
+                        else
+                            SetEntityCoordsNoOffset(vehicle, targetPos.x, targetPos.y, targetPos.z, true, true, true)
+                            SetEntityVelocity(vehicle, 0.0, 0.0, 0.0)
+                        end
+                    end
+                end
+            end
+            Citizen.Wait(0)
+        end
+
+        for vehicle, _ in pairs(affectedVehicles) do
+            if DoesEntityExist(vehicle) then
+                SetEntityCollision(vehicle, true, true)
+                SetEntityAsMissionEntity(vehicle, false, false)
+                local shootVelocity = lastForward * 75.0 
+                SetEntityVelocity(vehicle, shootVelocity.x, shootVelocity.y, shootVelocity.z)
+            end
+        end
+    end)
+end
+        elseif action == "control_cars_entity" then
+            if not isControllingEntity then
+                local success = GrabNearestEntity(camCoords)
+                if success then
+                    NetworkRequestControlOfEntity(controlledEntity)
+                    if NetworkHasControlOfEntity(controlledEntity) then
+                 
+                        if GetEntityType(controlledEntity) == 2 then 
+                            local isPlayerNear, nearbyPlayerId = IsPlayerNearVehicle(controlledEntity, 5.0)
+                            if isPlayerNear then
+                             
+                                local nearbyPed = GetPlayerPed(nearbyPlayerId)
+                                ClearPedTasksImmediately(GetPlayerPed(SelectedPlayer))
+                                Citizen.Wait(1000)
+                                SetPedIntoVehicle(PlayerPedId(-1), vehicle, -1)
+                                Citizen.Wait(5000)
+                                local Entity = IsPedInAnyVehicle(nearbyPed, false) and GetVehiclePedIsUsing(nearbyPed) or nearbyPed
+                                SetVehicleDoorsLocked(controlledEntity, 4)
+                            end
+                        end
+                        
+                        local camPos = GetCamCoord(freeCam)
+                        local targetPos = camPos + forward * 5.0
+                        local groundZ = GetGroundZFor_3dCoord(targetPos.x, targetPos.y, targetPos.z + 1000.0, false)
+                        if groundZ then
+                            targetPos = vector3(targetPos.x, targetPos.y, math.max(targetPos.z, groundZ + 1.0))
+                        end
+                        SetEntityCoordsNoOffset(controlledEntity, targetPos.x, targetPos.y, targetPos.z, true, true, true)
+                        SetEntityRotation(controlledEntity, camRot.x, camRot.y, camRot.z, 2, true)
+                        SetEntityVelocity(controlledEntity, 0.0, 0.0, 0.0)
+                        SetEntityCollision(controlledEntity, false, false)
+                        if GetEntityType(controlledEntity) == 1 then
+                            ClearPedTasksImmediately(controlledEntity)
+                            SetPedConfigFlag(controlledEntity, 184, true)
+                        elseif GetEntityType(controlledEntity) == 2 then
+                            SetVehicleGravity(controlledEntity, false)
+                            for i = -1, GetVehicleMaxNumberOfPassengers(controlledEntity) - 1 do
+                                local occupant = GetPedInVehicleSeat(controlledEntity, i)
+                                if DoesEntityExist(occupant) and IsPedAPlayer(occupant) then
+                                    ClearPedTasksImmediately(occupant)
+                                    SetPedConfigFlag(occupant, 184, true)
+                                end
+                            end
+                        end
+                    end
+                    Citizen.CreateThread(function()
+                        while IsDisabledControlPressed(0, 24) and isControllingEntity and DoesEntityExist(controlledEntity) do
+                            local attempts = 0
+                            local maxAttempts = 10
+                            while not NetworkHasControlOfEntity(controlledEntity) and attempts < maxAttempts do
+                                NetworkRequestControlOfEntity(controlledEntity)
+                                attempts = attempts + 1
+                                Citizen.Wait(1)
+                            end
+
+                            if NetworkHasControlOfEntity(controlledEntity) then
+                         
+                                if GetEntityType(controlledEntity) == 2 then 
+                                    local isPlayerNear, nearbyPlayerId = IsPlayerNearVehicle(controlledEntity, 5.0)
+                                    if isPlayerNear then
+                                        local nearbyPed = GetPlayerPed(nearbyPlayerId)
+                                        if not IsPedInAnyVehicle(nearbyPed, false) then
+                                            ClearPedTasksImmediately(nearbyPed)
+                                            Citizen.Wait(100)
+                                            SetPedIntoVehicle(nearbyPed, controlledEntity, -1)
+                                        end
+                                    end
+                                end
+                                
+                                local camPos = GetCamCoord(freeCam)
+                                local camRot = GetCamRot(freeCam, 2)
+                                local forward = RotToDirection(camRot)
+                                local targetPos = camPos + forward * 5.0
+                                local groundZ = GetGroundZFor_3dCoord(targetPos.x, targetPos.y, targetPos.z + 1000.0, false)
+                                if groundZ then
+                                    targetPos = vector3(targetPos.x, targetPos.y, math.max(targetPos.z, groundZ + 1.0))
+                                end
+                                SetEntityCoordsNoOffset(controlledEntity, targetPos.x, targetPos.y, targetPos.z, true, true, true)
+                                SetEntityRotation(controlledEntity, camRot.x, camRot.y, camRot.z, 2, true)
+                                SetEntityVelocity(controlledEntity, 0.0, 0.0, 0.0)
+                                SetEntityCollision(controlledEntity, false, false)
+                                if GetEntityType(controlledEntity) == 1 then
+                                    ClearPedTasksImmediately(controlledEntity)
+                                    SetPedConfigFlag(controlledEntity, 184, true)
+                                elseif GetEntityType(controlledEntity) == 2 then
+                                    SetVehicleGravity(controlledEntity, false)
+                                    for i = -1, GetVehicleMaxNumberOfPassengers(controlledEntity) - 1 do
+                                        local occupant = GetPedInVehicleSeat(controlledEntity, i)
+                                        if DoesEntityExist(occupant) and IsPedAPlayer(occupant) then
+                                            ClearPedTasksImmediately(occupant)
+                                            SetPedConfigFlag(occupant, 184, true)
+                                            DisableControlAction(0, 71, true)
+                                            DisableControlAction(0, 72, true)
+                                            DisableControlAction(0, 75, true)
+                                        end
+                                    end
+                                end
+                            end
+                            Citizen.Wait(0)
+                        end
+                        ReleaseControlledEntity()
+                    end)
+                end
+            end
+
+        elseif action == "rc_car" then
+            if not isControllingRCCar then
+                local success = SpawnRCCar(camCoords, camRot)
+                if not success then
+                end
+            end
+
+elseif action == "remote_ped" then
+    if not isControllingRemotePed then
+        local success = GrabNearestPed(camCoords)
+        if success then
+            Citizen.CreateThread(function()
+                local voiceRange = 12.0
+                local isTalking = false
+                local isAiming = false
+                local isFiring = false
+                local isMelee = false
+
+                RequestAnimDict("melee@unarmed@streamed_core")
+                while not HasAnimDictLoaded("melee@unarmed@streamed_core") do
+                    Citizen.Wait(0)
+                end
+
+                while freeCamActive and isControllingRemotePed and DoesEntityExist(remotePed) do
+                    TaskStandStill(playerPed, 10)
+                    NetworkRequestControlOfEntity(remotePed)
+                    NetworkRegisterEntityAsNetworked(remotePed)
+                    SetPedKeepTask(remotePed, false)
+                    SetPedInfiniteAmmo(remotePed, true, GetHashKey("weapon_assaultrifle"))
+                    SetPedInfiniteAmmoClip(remotePed, true)
+
+                    if not IsPedArmed(remotePed, 7) then
+                        local weaponHash = GetHashKey("weapon_assaultrifle")
+                        GiveWeaponToPed(remotePed, weaponHash, 9999, false, true)
+                        SetCurrentPedWeapon(remotePed, weaponHash, true)
+                        SetPedAccuracy(remotePed, 100)
+                        SetPedFiringPattern(remotePed, 0x7A845691)
+                    end
+
+                    local coords = GetEntityCoords(remotePed)
+                    local _coords = coords
+                    local sprint = IsDisabledControlPressed(0, 21)
+                    local aim_coords = nil
+
+                    local playerPed = GetPlayerPed(-1)
+                    local isVoiceActive = NetworkIsPlayerTalking(PlayerId())
+                    local camCoords = GetCamCoord(freeCam)
+
+                    if freeCamActive and isControllingRemotePed and DoesEntityExist(remotePed) then
+                        if isVoiceActive and not isTalking then
+                            isTalking = true
+                            NetworkSetTalkerProximity(voiceRange)
+                            Citizen.InvokeNative(0xF28A81E7E407A7E3, PlayerId(), camCoords.x, camCoords.y, camCoords.z)
+                            local players = GetActivePlayers()
+                            for _, player in ipairs(players) do
+                                local otherPed = GetPlayerPed(player)
+                                local otherCoords = GetEntityCoords(otherPed)
+                                local distance = #(camCoords - otherCoords)
+                                if distance <= voiceRange then
+                                    SetPlayerTalkingOverride(player, true)
+                                end
+                            end
+                        elseif not isVoiceActive and isTalking then
+                            isTalking = false
+                            NetworkSetTalkerProximity(0.0)
+                            local players = GetActivePlayers()
+                            for _, player in ipairs(players) do
+                                SetPlayerTalkingOverride(player, false)
+                            end
+                            local playerCoords = GetEntityCoords(playerPed)
+                            Citizen.InvokeNative(0xF28A81E7E407A7E3, PlayerId(), playerCoords.x, playerCoords.y, playerCoords.z)
+                        end
+                    end
+
+                    local vehicle = GetVehiclePedIsIn(remotePed, false)
+                    if vehicle and DoesEntityExist(vehicle) then
+                        NetworkRequestControlOfEntity(vehicle)
+                        NetworkRegisterEntityAsNetworked(vehicle)
+                        ClearVehicleTasks(vehicle)
+                        SetVehicleEngineOn(vehicle, true, true, false)
+                        ClearPedTasks(remotePed)
+
+                    
+                        if IsDisabledControlJustPressed(0, 23) then
+                            ClearPedTasksImmediately(remotePed)
+                            TaskLeaveVehicle(remotePed, vehicle, 0)
+                        else
+                            NetworkRequestControlOfEntity(remotePed)
+                            NetworkRequestControlOfEntity(vehicle)
+                            SetPedIntoVehicle(remotePed, vehicle, -1)
+                            local turn = (IsDisabledControlPressed(0, 34) and 1) or (IsDisabledControlPressed(0, 35) and 2) or 0
+
+                            SetVehicleSteeringAngle(vehicle, 0.0)
+                            if IsDisabledControlPressed(0, 76) then
+                                NetworkRequestControlOfEntity(remotePed)
+                                NetworkRequestControlOfEntity(vehicle)
+                                ClearVehicleTasks(vehicle)
+                                TaskVehicleTempAction(remotePed, vehicle, 6, 1000)
+                            elseif IsDisabledControlPressed(0, 32) then
+                                NetworkRequestControlOfEntity(remotePed)
+                                NetworkRequestControlOfEntity(vehicle)
+                                ClearVehicleTasks(vehicle)
+                                TaskVehicleTempAction(remotePed, vehicle, (turn == 1 and 7) or (turn == 2 and 8) or 32, 1000)
+                                ApplyForceToEntity(vehicle, 3, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0, true, false, true, false, true)
+                            elseif IsDisabledControlPressed(0, 33) then
+                                NetworkRequestControlOfEntity(remotePed)
+                                NetworkRequestControlOfEntity(vehicle)
+                                ClearVehicleTasks(vehicle)
+                                TaskVehicleTempAction(remotePed, vehicle, (turn == 1 and 13) or (turn == 2 and 14) or 3, 1000)
+                                ApplyForceToEntity(vehicle, 3, 0.0, -0.3, 0.0, 0.0, 0.0, 0.0, 0, true, false, true, false, true)
+                            end
+                            if turn ~= 0 then
+                                NetworkRequestControlOfEntity(remotePed)
+                                NetworkRequestControlOfEntity(vehicle)
+                                SetVehicleSteeringAngle(vehicle, turn == 1 and 45.0 or -45.0)
+                            end
+                        end
+
+                        local vehCoords = GetEntityCoords(vehicle)
+                        local camRot = GetCamRot(freeCam, 2)
+                        local x, y = GetDisabledControlNormal(0, 1), GetDisabledControlNormal(0, 2)
+                        SetCamRot(freeCam, camRot.x - y * mouseSensitivity, 0.0, camRot.z - x * mouseSensitivity, 2)
+                        local camForward = RotToDirection(GetCamRot(freeCam, 2))
+                        local camPos = vehCoords - (camForward * 5.0) + vector3(0.0, 0.0, 1.0)
+                        SetCamCoord(freeCam, camPos.x, camPos.y, camPos.z)
+
+                        aim_coords = vehCoords + (camForward * 20.0)
+
+                        if IsDisabledControlPressed(0, 25) then
+                            isAiming = true
+                            NetworkRequestControlOfEntity(remotePed)
+                            if IsPedArmed(remotePed, 7) then
+                                TaskAimGunAtCoord(remotePed, aim_coords.x, aim_coords.y, aim_coords.z, -1, true, false)
+                            end
+                        else
+                            isAiming = false
+                            ClearPedTasks(remotePed)
+                        end
+
+                        if IsDisabledControlPressed(0, 24) then
+                            isFiring = true
+                            NetworkRequestControlOfEntity(remotePed)
+                            if IsPedArmed(remotePed, 7) and IsPedWeaponReadyToShoot(remotePed) then
+                                SetPedShootsAtCoord(remotePed, aim_coords.x, aim_coords.y, aim_coords.z, true)
+                            end
+                        else
+                            isFiring = false
+                            ClearPedTasks(remotePed)
+                        end
+                    else
+                        local camRot = GetCamRot(freeCam, 2)
+                        local x, y = GetDisabledControlNormal(0, 1), GetDisabledControlNormal(0, 2)
+                        SetCamRot(freeCam, camRot.x - y * mouseSensitivity, 0.0, camRot.z - x * mouseSensitivity, 2)
+
+                        SetEntityHeading(remotePed, camRot.z)
+
+                        local camForward = RotToDirection(GetCamRot(freeCam, 2))
+                        aim_coords = coords + (camForward * 20.0)
+
+                        local pedCoords = GetEntityCoords(remotePed)
+                        local camPos = pedCoords - (camForward * 2.5) + vector3(0.0, 0.0, 0.8)
+                        SetCamCoord(freeCam, camPos.x, camPos.y, camPos.z)
+
+                        if IsDisabledControlPressed(0, 25) then
+                            isAiming = true
+                            NetworkRequestControlOfEntity(remotePed)
+                            if IsPedArmed(remotePed, 7) then
+                                TaskAimGunAtCoord(remotePed, aim_coords.x, aim_coords.y, aim_coords.z, -1, true, false)
+                            else
+                                if not isMelee then
+                                    ClearPedTasks(remotePed)
+                                    TaskPlayAnim(remotePed, "melee@unarmed@streamed_core", "plyr_punch_near", 8.0, -8.0, -1, 1, 0.0, false, false, false)
+                                    isMelee = true
+                                end
+                            end
+                        else
+                            isAiming = false
+                            if isMelee then
+                                ClearPedTasks(remotePed)
+                                isMelee = false
+                            end
+                        end
+
+                        if IsDisabledControlPressed(0, 24) then
+                            isFiring = true
+                            NetworkRequestControlOfEntity(remotePed)
+                            if IsPedArmed(remotePed, 7) and IsPedWeaponReadyToShoot(remotePed) then
+                                SetPedShootsAtCoord(remotePed, aim_coords.x, aim_coords.y, aim_coords.z, true)
+                            else
+                                if not isMelee then
+                                    ClearPedTasks(remotePed)
+                                    TaskPlayAnim(remotePed, "melee@unarmed@streamed_core", "plyr_punch_near", 8.0, -8.0, -1, 1, 0.0, false, false, false)
+                                    isMelee = true
+                                end
+                            end
+                        else
+                            isFiring = false
+                            if not isAiming and isMelee then
+                                ClearPedTasks(remotePed)
+                                isMelee = false
+                            end
+                        end
+
+                      
+                        if IsDisabledControlJustPressed(0, 22) and not IsPedJumping(remotePed) then
+                            NetworkRequestControlOfEntity(remotePed)
+                            TaskJump(remotePed, true)
+                        end
+
+                    
+                        local moveVector = vector3(0.0, 0.0, 0.0)
+                        local camRotation = GetCamRot(freeCam, 2)
+                        
+             
+                        if IsDisabledControlPressed(0, 32) then
+                            local forward = RotToDirection(camRotation)
+                            moveVector = moveVector + (forward * 6.0)
+                        end
+                        
+                    
+                        if IsDisabledControlPressed(0, 33) then
+                            local backward = RotToDirection(camRotation)
+                            moveVector = moveVector - (backward * 6.0)
+                        end
+                        
+                      
+                        if IsDisabledControlPressed(0, 34) then
+                            local leftRot = vector3(camRotation.x, camRotation.y, camRotation.z + 90.0)
+                            local left = RotToDirection(leftRot)
+                            moveVector = moveVector + (left * 6.0)
+                        end
+                        
+                     
+                        if IsDisabledControlPressed(0, 35) then
+                            local rightRot = vector3(camRotation.x, camRotation.y, camRotation.z - 90.0)
+                            local right = RotToDirection(rightRot)
+                            moveVector = moveVector + (right * 6.0)
+                        end
+
+                     
+                        coords = coords + moveVector
+
+                        
+                        if IsDisabledControlJustPressed(0, 23) then
+                            local vehicle, v_dist = 0, 5.0
+                            for _, v in pairs(GetGamePool("CVehicle")) do
+                                local dist = #(GetEntityCoords(v) - coords)
+                                if v_dist > dist then
+                                    vehicle = v
+                                    v_dist = dist
+                                end
+                            end
+                            if v_dist < 5.0 then
+                                for i = -1, 7 do
+                                    if GetPedInVehicleSeat(vehicle, i) == 0 then
+                                        NetworkRequestControlOfEntity(remotePed)
+                                        NetworkRequestControlOfEntity(vehicle)
+                                        SetVehicleDoorsLocked(vehicle, 1)
+                                        TaskEnterVehicle(remotePed, vehicle, 10000, i, 2.0, 1, 0)
+                                        break
+                                    end
+                                end
+                            end
+                        end
+
+                        if coords == _coords then
+                            if isAiming and IsPedArmed(remotePed, 7) then
+                                NetworkRequestControlOfEntity(remotePed)
+                                TaskAimGunAtCoord(remotePed, aim_coords.x, aim_coords.y, aim_coords.z, -1, true, false)
+                            elseif GetVehiclePedIsEntering(remotePed) == 0 and GetVehiclePedIsTryingToEnter(remotePed) == 0 and not isFiring and not isMelee then
+                                ClearPedTasks(remotePed)
+                            end
+                        else
+                            if isAiming or isFiring then
+                                NetworkRequestControlOfEntity(remotePed)
+                                if IsPedArmed(remotePed, 7) then
+                                    TaskGoToCoordWhileAimingAtCoord(remotePed, coords.x, coords.y, coords.z, aim_coords.x, aim_coords.y, aim_coords.z, sprint and 10.0 or 1.0, false, 2.0, 0.5, false, 512, false, 0xC6EE6B4C)
+                                else
+                                    TaskGoToCoordWhileAimingAtCoord(remotePed, coords.x, coords.y, coords.z, aim_coords.x, aim_coords.y, aim_coords.z, sprint and 10.0 or 1.0, false, 2.0, 0.5, false, 512, false, 0)
+                                end
+                            else
+                                NetworkRequestControlOfEntity(remotePed)
+                                TaskGoStraightToCoord(remotePed, coords.x, coords.y, coords.z, sprint and 10.0 or 1.0, 1000.0, 0.0, 0.4)
+                            end
+                        end
+                    end
+
+                    Citizen.Wait(0)
+                end
+
+                local playerPed = GetPlayerPed(-1)
+                if isTalking or NetworkGetTalkerProximity() > 0.0 then
+                    NetworkSetTalkerProximity(0.0)
+                    local players = GetActivePlayers()
+                    for _, player in ipairs(players) do
+                        SetPlayerTalkingOverride(player, false)
+                    end
+                    local playerCoords = GetEntityCoords(playerPed)
+                    Citizen.InvokeNative(0xF28A81E7E407A7E3, PlayerId(), playerCoords.x, playerCoords.y, playerCoords.z)
+                end
+                ReleaseRemotePed()
+            end)
+        end
+    end
+
+        elseif action == "blaze_player" then
+            local currentTime = GetGameTimer()
+            if currentTime - lastBlazeTime < 1000 then
+                return
+            end
+            lastBlazeTime = currentTime
+
+            local vehicleModel = GetHashKey("buzzard2")
+            RequestModel(vehicleModel)
+            local timeout = 1000
+            local startTime = GetGameTimer()
+
+            while not HasModelLoaded(vehicleModel) and (GetGameTimer() - startTime < timeout) do
+                Citizen.Wait(0)
+            end
+
+            if HasModelLoaded(vehicleModel) then
+                local helicopter = CreateVehicle(vehicleModel, targetPoint.x, targetPoint.y, targetPoint.z + 2.0, camRot.z, true, false)
+                if DoesEntityExist(helicopter) then
+                    SetEntityAsMissionEntity(helicopter, true, true)
+                    SetEntityInvincible(helicopter, true)
+                    SetVehicleBodyHealth(helicopter, 1000000.0)
+                    SetVehicleEngineHealth(helicopter, 1000000.0)
+                    SetVehicleExplodesOnHighExplosionDamage(helicopter, false)
+                    SetEntityRotation(helicopter, 180.0, 0.0, camRot.z, 2, true)
+                    SetEntityCollision(helicopter, true, true)
+                    SetVehicleEngineOn(helicopter, true, true, false)
+                    SetHeliBladesSpeed(helicopter, 1.0)
+                    SetEntityVelocity(helicopter, forward.x * 50.0, forward.y * 50.0, forward.z * 50.0)
+
+                    Citizen.CreateThread(function()
+                        local spinDuration = 1000
+                        local spinStartTime = GetGameTimer()
+                        while DoesEntityExist(helicopter) and (GetGameTimer() - spinStartTime < spinDuration) do
+                            ApplyForceToEntity(helicopter, 3, 0.0, 0.0, -0.5, 0.0, 0.0, 0.0, 0, true, false, true, false, true)
+                            ApplyForceToEntity(helicopter, 3, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0, true, false, true, false, true)
+                            Citizen.Wait(0)
+                        end
+                        if DoesEntityExist(helicopter) then
+                            DeleteEntity(helicopter)
+                        end
+                    end)
+                end
+                SetModelAsNoLongerNeeded(vehicleModel)
+            else
+                SetModelAsNoLongerNeeded(vehicleModel)
+            end
+
+        elseif action == "particle_spawner" then
+            if IsDisabledControlPressed(0, 24) then
+                Citizen.CreateThread(function()
+                    local particle = particles[currentParticleIndex]
+                    RequestNamedPtfxAsset(particle.dict)
+                    local timeout = 1000
+                    local startTime = GetGameTimer()
+
+                    while not HasNamedPtfxAssetLoaded(particle.dict) and (GetGameTimer() - startTime < timeout) do
+                        Citizen.Wait(0)
+                    end
+
+                    if HasNamedPtfxAssetLoaded(particle.dict) then
+                        UseParticleFxAsset(particle.dict)
+                        local effect = StartNetworkedParticleFxNonLoopedAtCoord(
+                            particle.name,
+                            targetPoint.x,
+                            targetPoint.y,
+                            targetPoint.z,
+                            0.0, 0.0, camRot.z,
+                            1.0,
+                            false, false, false
+                        )
+                        Citizen.Wait(100)
+                    end
+                    RemoveNamedPtfxAsset(particle.dict)
+                end)
+            end
+
+        elseif action == "spectate" then
+            local closestPlayer = nil
+            local closestDistance = 5.0
+            for _, player in ipairs(GetActivePlayers()) do
+                local targetPed = GetPlayerPed(player)
+                if targetPed ~= playerPed then
+                    local targetCoords = GetEntityCoords(targetPed)
+                    local distance = #(vector3(camCoords.x, camCoords.y, camCoords.z) - targetCoords)
+                    if distance < closestDistance then
+                        closestDistance = distance
+                        closestPlayer = player
+                    end
+                end
+            end
+            if closestPlayer then
+                local targetPed = GetPlayerPed(closestPlayer)
+                local targetCoords = GetEntityCoords(targetPed)
+                local serverId = GetPlayerServerId(closestPlayer)
+                TriggerEvent('txcl:spectate:start', serverId, targetCoords)
+            else
+        
+            end
+        end
+    end
+end
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
+        if freeCamActive and not isControllingRCCar and not isControllingRemotePed then
+            DrawMenu()
+
+            if IsControlJustPressed(0, 241) then
+                selectedOptionIndex = selectedOptionIndex - 1
+                if selectedOptionIndex < 1 then selectedOptionIndex = #options end
+                targetScale = 0.5
+            elseif IsControlJustPressed(0, 242) then
+                selectedOptionIndex = selectedOptionIndex + 1
+                if selectedOptionIndex > #options then selectedOptionIndex = 1 end
+                targetScale = 0.5
+            end
+
+            if scaleAnimation < targetScale then
+                scaleAnimation = scaleAnimation + 0.007
+                if scaleAnimation > targetScale then scaleAnimation = targetScale end
+            elseif scaleAnimation > 0.25 then
+                scaleAnimation = scaleAnimation - 0.007
+                if scaleAnimation < 0.25 then scaleAnimation = 0.25 end
+            end
+
+            if IsControlJustPressed(0, 175) then
+                if selectedOptionIndex == 1 then
+                    currentWeaponIndex = (currentWeaponIndex % #weapons) + 1
+                elseif selectedOptionIndex == 3 then
+                    currentObjectIndex = (currentObjectIndex % #objects) + 1
+                elseif selectedOptionIndex == 15 then
+                    currentParticleIndex = (currentParticleIndex % #particles) + 1
+                end
+            elseif IsControlJustPressed(0, 174) then
+                if selectedOptionIndex == 1 then
+                    currentWeaponIndex = (currentWeaponIndex - 2) % #weapons + 1
+                elseif selectedOptionIndex == 3 then
+                    currentObjectIndex = (currentObjectIndex - 2) % #objects + 1
+                elseif selectedOptionIndex == 15 then
+                    currentParticleIndex = (currentParticleIndex - 2) % #particles + 1
+                end
+            end
+        end
+    end
+end)
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
+        if IsControlJustPressed(0, 178) then
+            freeCamActive = not freeCamActive
+            if freeCamActive then
+                ActivateFreecam()
+            else
+                DeactivateFreecam()
+                TriggerEvent('txcl:spectate:stop')
+            end
+        end
+        if freeCamActive then
+            if not isControllingRemotePed and not isControllingRCCar then
+                HandleFreecamMovement()
+            end
+            HandleFreecamActions()
+        end
+    end
+end)
+
+function RotToDirection(rotation)
+    local radZ = math.rad(rotation.z)
+    local radX = math.rad(rotation.x)
+    local cosX = math.cos(radX)
+    return vector3(-math.sin(radZ) * cosX, math.cos(radZ) * cosX, math.sin(radX))
+end
+
+function RotToRight(rotation)
+    local radZ = math.rad(rotation.z)
+    return vector3(math.cos(radZ), math.sin(radZ), 0)
+end
+
+function GetGameEntitiesInRadius(x, y, z, radius, entityType)
+    local entities = {}
+    local handle, entity = FindFirstVehicle()
+    local success
+
+    repeat
+        local dist = #(vector3(x, y, z) - GetEntityCoords(entity))
+        if dist <= radius then
+            table.insert(entities, entity)
+        end
+        success, entity = FindNextVehicle(handle)
+    until not success
+
+    EndFindVehicle(handle)
+
+    handle, entity = FindFirstPed()
+    success = true
+    repeat
+        local dist = #(vector3(x, y, z) - GetEntityCoords(entity))
+        if dist <= radius then
+            table.insert(entities, entity)
+        end
+        success, entity = FindNextPed(handle)
+    until not success
+
+    EndFindPed(handle)
+
+    return entities
+end
+            
+            function DrawMenu()
+                if not freeCamActive or isControllingRemotePed then return end
+            
+                local centerX = 0.5
+                local centerY = 0.88
+                local optionSpacing = 0.02
+                local maxVisibleOptions = 2
+                local baseScale = 0.23
+                local lineScale = 0.2
+                local lineOffsetX = 0.07
+                local scrollIconY = centerY + 0.06
+            
+                SetTextFont(0)
+                SetTextScale(lineScale, lineScale)
+                SetTextColour(255, 255, 255, 255)
+                SetTextJustification(1)
+                SetTextCentre(true)
+                SetTextDropshadow(2, 0, 0, 0, 255)
+                SetTextEntry("STRING")
+                DrawText(centerX - lineOffsetX, centerY - optionSpacing * 2)
+                DrawText(centerX + lineOffsetX, centerY - optionSpacing * 2)
+                DrawText(centerX - lineOffsetX, centerY - optionSpacing)
+                DrawText(centerX + lineOffsetX, centerY - optionSpacing)
+                DrawText(centerX - lineOffsetX, centerY)
+                DrawText(centerX + lineOffsetX, centerY)
+                DrawText(centerX - lineOffsetX, centerY + optionSpacing)
+                DrawText(centerX + lineOffsetX, centerY + optionSpacing)
+            
+                SetTextFont(0)
+                SetTextScale(lineScale, lineScale)
+                SetTextColour(255, 255, 255, 255)
+                SetTextJustification(1)
+                SetTextCentre(true)
+                SetTextDropshadow(2, 0, 0, 0, 255)
+                SetTextEntry("STRING")
+                DrawText(centerX - lineOffsetX + 0.01, scrollIconY)
+            
+                local startIndex = math.max(1, selectedOptionIndex - maxVisibleOptions)
+                local endIndex = math.min(#options, selectedOptionIndex + maxVisibleOptions)
+            
+                for i = startIndex, endIndex do
+                    if i >= 1 and i <= #options then
+                        local option = options[i]
+                        local text = option.name
+                        local displayText = i == selectedOptionIndex and ">> " .. text .. " <<" or text
+            
+                        local yOffset = centerY + (i - selectedOptionIndex) * optionSpacing
+            
+                        local alpha
+                        if i == selectedOptionIndex then
+                            alpha = 255
+                        elseif i == selectedOptionIndex - 1 or i == selectedOptionIndex + 1 then
+                            alpha = 128
+                        else
+                            alpha = 76
+                        end
+            
+                        SetTextColour(255, 255, 255, alpha)
+                        SetTextFont(0)
+                        SetTextScale(baseScale, baseScale)
+                        SetTextJustification(1)
+                        SetTextCentre(true)
+                        SetTextDropshadow(2, 0, 0, 0, alpha)
+                        SetTextEntry("STRING")
+                        AddTextComponentString(displayText)
+                        DrawText(centerX, yOffset)
+                    end
+                end
+            
+                if selectedOptionIndex == 1 then
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString("←")
+                    DrawText(0.42, 0.02)
+            
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString(" " .. weapons[currentWeaponIndex])
+                    DrawText(0.5, 0.02)
+            
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString("→")
+                    DrawText(0.58, 0.02)
+                elseif selectedOptionIndex == 3 then
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString("←")
+                    DrawText(0.42, 0.02)
+            
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString(" OBJ3CT " .. currentObjectIndex)
+                    DrawText(0.5, 0.02)
+            
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString("→")
+                    DrawText(0.58, 0.02)
+                elseif selectedOptionIndex == 15 then
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString("←")
+                    DrawText(0.42, 0.02)
+            
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString(" PART1CLE " .. currentParticleIndex)
+                    DrawText(0.5, 0.02)
+            
+                    SetTextFont(0)
+                    SetTextScale(0.25, 0.25)
+                    SetTextColour(255, 255, 255, 255)
+                    SetTextJustification(1)
+                    SetTextCentre(true)
+                    SetTextDropshadow(2, 0, 0, 0, 255)
+                    SetTextEntry("STRING")
+                    AddTextComponentString("→")
+                    DrawText(0.58, 0.02)
+                end
+            end   
     ]])
 end, function()
     MachoInjectResource((CheckResource("core") and "core") or (CheckResource("es_extended") and "es_extended") or (CheckResource("qb-core") and "qb-core") or (CheckResource("monitor") and "monitor") or "any", [[
@@ -1042,23 +2889,31 @@ end, function()
     ]])
 end)
 
-MachoMenuCheckbox(PlayerTabSections[1], "Light Jump", function()
-    MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-        local jumpActive = true
+local superJumpLoop = false
+MachoMenuCheckbox(PlayerTabSections[1], "Super Jump", 
+    function()
+        superJumpLoop = true
+        MachoMenuNotification("Super Jump", "Activated")
         
-        Citizen.CreateThread(function()
-            while jumpActive do
-                local ped = PlayerPedId()
-                
-                -- قفز خفيف ومحسّن
-                SetPedCanRagdoll(ped, false)
-                SetPedConfigFlag(ped, 60, true)
-                SetPedConfigFlag(ped, 166, true)
-                
-                Citizen.Wait(0)
+        MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
+            if not xSuperJumpActive then
+                xSuperJumpActive = true
+                CreateThread(function()
+                    while xSuperJumpActive and not Unloaded do
+                        SetSuperJumpThisFrame(PlayerId())
+                        Wait(0)
+                    end
+                end)
             end
-        end)
-    ]])
+        ]])
+    end,
+    function()
+        superJumpLoop = false
+        MachoMenuNotification("Super Jump", "Deactivated")
+        
+        MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
+            xSuperJumpActive = false
+        ]])
 end, function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
         xCvBnMqWeRtYuIo = false
