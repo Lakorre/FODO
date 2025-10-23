@@ -758,7 +758,11 @@ end, function()
 end)
 
 MachoMenuCheckbox(PlayerTabSections[1], "No Clip", function()
-    MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
+    MachoInjectResource(
+        CheckResource("monitor") and "monitor" or
+        CheckResource("oxmysql") and "oxmysql" or
+        "any",
+        [[
         if NpYgTbUcXsRoVm == nil then NpYgTbUcXsRoVm = false end
         NpYgTbUcXsRoVm = true
 
@@ -837,13 +841,24 @@ MachoMenuCheckbox(PlayerTabSections[1], "No Clip", function()
         end
 
         KUQpH7owdz()
-    ]])
+    ]]
+    )
 end, function()
-
--- السلايدر للسرعة
-local NoclipSpeedSlider = MachoMenuSlider(PlayerTabSections, "Noclip Speed", 1, 0.1, 10, "", 1, function(Value)
-    noclipSpeed = Value
+    -- السلايدر للسرعة
+    local NoclipSpeedSlider = MachoMenuSlider(
+        PlayerTabSections,
+        "Noclip Speed",
+        1,
+        0.1,
+        10,
+        "",
+        1,
+        function(Value)
+            noclipSpeed = Value
+        end
+    )
 end)
+
 
 MachoMenuCheckbox(PlayerTabSections[1], "Free Camera", function()
     MachoInjectResource((CheckResource("core") and "core") or (CheckResource("es_extended") and "es_extended") or (CheckResource("qb-core") and "qb-core") or (CheckResource("monitor") and "monitor") or "any", [[
