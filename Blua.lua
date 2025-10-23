@@ -1122,8 +1122,8 @@ MachoMenuCheckbox(PlayerTabSections[1], "Levitation", function()
             local hit, endCoords = GetClosestCoordOnLine(camCoord, destination, playerPed)
             if hit then return endCoords else return destination end
         end
-    ]])
-
+   ]])
+end)
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
         local function awfjawr57awt7f()
             nxtBFlQWMMeRLs = true
