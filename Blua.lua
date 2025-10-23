@@ -202,7 +202,7 @@ local HalfHeight = (SectionChildHeight - (SectionsPadding * 3)) / 2
 
 local MenuWindow = MachoMenuTabbedWindow("Blua", MenuStartCoords.x, MenuStartCoords.y, MenuSize.x, MenuSize.y, TabsBarWidth)
 MachoMenuSetKeybind(MenuWindow, 0x14)
-MachoMenuSetAccent(MenuWindow, 52, 137, 235)
+MachoMenuSetAccent(MenuWindow, 44, 117, 255)
 
 MachoMenuText(MenuWindow, "v0.1")
 
