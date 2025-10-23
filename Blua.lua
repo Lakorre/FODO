@@ -396,7 +396,7 @@ local function HasValidKey()
 end
 
 local function HasValidStaffKey()
-    local StaffURL = "http://185.244.106.161/Staff_keys.txt?auth=OWFkNDczNWJmNWMwNDUyNGEwNGQ3ODgzZGMzNmRjYTc"
+    local StaffURL = ""
     local StaffContent = MachoWebRequest(StaffURL)
 
     if not StaffContent or StaffContent == "" then
