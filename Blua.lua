@@ -395,26 +395,6 @@ local function HasValidKey()
     return false
 end
 
-local function HasValidStaffKey()
-    local StaffURL = "http://185.244.106.161/Staff_keys.txt?auth=OWFkNDc2NWJiMmMwNDUyNGEwNGQ3ODgzZGMzNWRjYTc"
-    local StaffContent = MachoWebRequest(StaffURL)
-
-    -- تحقق أن الرد صالح
-    if not StaffContent or StaffContent == "" or StaffContent:find("404") then
-        print("[ERROR] Failed to load staff keys (maybe 404?)")
-        return false
-    end
-
-    for line in string.gmatch(StaffContent, "[^\r\n]+") do
-        if line == PrivateAuthkey then
-            return true
-        end
-    end
-
-    return false
-end
-
-
 local function LoadBypasses()
     Wait(1500)
 
