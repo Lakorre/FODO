@@ -2889,31 +2889,35 @@ end, function()
     ]])
 end)
 
-local superJumpLoop = false
+local zXvBnMqWeLkJhGf = false
 MachoMenuCheckbox(PlayerTabSections[1], "Super Jump", 
     function()
-        superJumpLoop = true
-        MachoMenuNotification("Super Jump", "Activated")
+        zXvBnMqWeLkJhGf = true
         
         MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-            if not xSuperJumpActive then
-                xSuperJumpActive = true
-                CreateThread(function()
-                    while xSuperJumpActive and not Unloaded do
-                        SetSuperJumpThisFrame(PlayerId())
-                        Wait(0)
+            local qWeRtYuIoPaSdF = {[0x4E]={[0x1A]=0x1,[0x2B]=0x0}}
+            local function hGfDsAzXcVbNmQw()
+                local yTrEwQaSdFgHjKl = CreateThread or Citizen.CreateThread
+                yTrEwQaSdFgHjKl(function()
+                    local pLmKoNjIbHuGyVf = PlayerId
+                    local xCvBnMlKjHgFdSa = SetSuperJumpThisFrame
+                    while qWeRtYuIoPaSdF[0x4E][0x1A] == 0x1 do
+                        xCvBnMlKjHgFdSa(pLmKoNjIbHuGyVf())
+                        Wait(qWeRtYuIoPaSdF[0x4E][0x2B])
                     end
                 end)
             end
+            hGfDsAzXcVbNmQw()
         ]])
     end,
     function()
-        superJumpLoop = false
-        MachoMenuNotification("Super Jump", "Deactivated")
+        zXvBnMqWeLkJhGf = false
         
         MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-            xSuperJumpActive = false
+            if qWeRtYuIoPaSdF then qWeRtYuIoPaSdF[0x4E][0x1A]=0x0 end
         ]])
+    end
+)
 end, function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
         xCvBnMqWeRtYuIo = false
