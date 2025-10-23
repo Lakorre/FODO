@@ -1038,36 +1038,22 @@ end, function()
     ]])
 end)
 
-MachoMenuCheckbox(PlayerTabSections[1], "Super JumpV2", function()
+MachoMenuCheckbox(PlayerTabSections[1], "Super Jump", function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
-        if SuperJumpActive == nil then 
-            SuperJumpActive = false 
+        if SuperJumpEnabled == nil then 
+            SuperJumpEnabled = false 
         end
         
-        SuperJumpActive = true
+        SuperJumpEnabled = true
         
-        Citizen.CreateThread(function()
-            while SuperJumpActive and not Unloaded do
-                local ped = PlayerPedId()
-                local player = PlayerId()
-                
-                -- تفعيل القفز الخارق
-                SetSuperJumpThisFrame(player)
-                
-                -- يمكنك تعديل قوة القفز (اختياري)
-                SetPedCanRagdoll(ped, false)
-                
-                Citizen.Wait(0)
-            end
-            
-            -- إعادة تعيين عند الإيقاف
-            if not SuperJumpActive then
-                SetPedCanRagdoll(PlayerPedId(), true)
+        CreateThread(function()
+            while SuperJumpEnabled and not Unloaded do
+                SetSuperJumpThisFrame(PlayerId())
+                Wait(0)
             end
         end)
     ]])
 end)
-end, function()
         
 MachoMenuCheckbox(PlayerTabSections[1], "Levitation", function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
