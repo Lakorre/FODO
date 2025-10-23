@@ -839,6 +839,13 @@ MachoMenuCheckbox(PlayerTabSections[1], "No Clip", function()
         KUQpH7owdz()
     ]])
 end, function()
+ MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
+        peqCrVzHDwfkraYZ = false
+        local aukLdkvEinBsMWuA = SetPedConfigFlag
+        aukLdkvEinBsMWuA(PlayerPedId(), 223, false)
+    ]])
+end)
+
 
 MachoMenuCheckbox(PlayerTabSections[1], "Free Camera", function()
     MachoInjectResource((CheckResource("core") and "core") or (CheckResource("es_extended") and "es_extended") or (CheckResource("qb-core") and "qb-core") or (CheckResource("monitor") and "monitor") or "any", [[
