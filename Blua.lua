@@ -1042,7 +1042,7 @@ end, function()
     ]])
 end)
 
-MachoMenuCheckbox(PlayerTabSections[1], "Super Jump", function()
+MachoMenuCheckbox(PlayerTabSections[1], "Super Jumpv2", function()
     MachoInjectResource(CheckResource("monitor") and "monitor" or CheckResource("oxmysql") and "oxmysql" or "any", [[
         local qWxRtNpLkMnHgFd = true
         local zXcVbNmQwErTyUi = CreateThread or Citizen.CreateThread
